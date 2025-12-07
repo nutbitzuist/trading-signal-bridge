@@ -149,4 +149,57 @@ export const dashboardApi = {
   stats: () => api.get('/dashboard/stats'),
 };
 
+// Admin API
+export const adminApi = {
+  stats: () => api.get('/admin/stats'),
+
+  listUsers: (params?: {
+    page?: number;
+    per_page?: number;
+    search?: string;
+    tier?: string;
+    is_active?: boolean;
+    is_approved?: boolean;
+    is_admin?: boolean;
+  }) => api.get('/admin/users', { params }),
+
+  getUser: (id: string) => api.get(`/admin/users/${id}`),
+
+  createUser: (data: {
+    email: string;
+    password: string;
+    full_name?: string;
+    is_admin?: boolean;
+    tier?: string;
+    is_approved?: boolean;
+    is_active?: boolean;
+    max_accounts?: number;
+    max_signals_per_day?: number;
+    admin_notes?: string;
+  }) => api.post('/admin/users', data),
+
+  updateUser: (id: string, data: {
+    email?: string;
+    full_name?: string;
+    password?: string;
+    is_admin?: boolean;
+    is_active?: boolean;
+    tier?: string;
+    is_approved?: boolean;
+    max_accounts?: number;
+    max_signals_per_day?: number;
+    admin_notes?: string;
+  }) => api.put(`/admin/users/${id}`, data),
+
+  deleteUser: (id: string) => api.delete(`/admin/users/${id}`),
+
+  approveUser: (id: string, data: { is_approved: boolean; admin_notes?: string }) =>
+    api.post(`/admin/users/${id}/approve`, data),
+
+  upgradeTier: (id: string, data: { tier: string; admin_notes?: string }) =>
+    api.post(`/admin/users/${id}/upgrade-tier`, data),
+
+  toggleAdmin: (id: string) => api.post(`/admin/users/${id}/toggle-admin`),
+};
+
 export default api;

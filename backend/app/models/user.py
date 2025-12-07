@@ -3,7 +3,8 @@ User model for authentication and account management.
 """
 import uuid
 from datetime import datetime
-from typing import TYPE_CHECKING, List
+from enum import Enum
+from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy import Boolean, DateTime, Index, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -14,6 +15,14 @@ from app.database import Base
 if TYPE_CHECKING:
     from app.models.account import MTAccount
     from app.models.signal import Signal
+
+
+class UserTier(str, Enum):
+    """User subscription tiers."""
+    FREE = "free"
+    BASIC = "basic"
+    PRO = "pro"
+    ENTERPRISE = "enterprise"
 
 
 class User(Base):
@@ -54,6 +63,40 @@ class User(Base):
     is_admin: Mapped[bool] = mapped_column(
         Boolean,
         default=False,
+        nullable=False,
+    )
+    # User tier/subscription
+    tier: Mapped[str] = mapped_column(
+        String(20),
+        default=UserTier.FREE.value,
+        nullable=False,
+    )
+    # Approval status for new users
+    is_approved: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,  # Auto-approve by default, admin can change
+        nullable=False,
+    )
+    approved_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    approved_by: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        nullable=True,
+    )
+    # Admin notes
+    admin_notes: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+    # Tier limits
+    max_accounts: Mapped[int] = mapped_column(
+        default=2,  # Free tier default
+        nullable=False,
+    )
+    max_signals_per_day: Mapped[int] = mapped_column(
+        default=50,  # Free tier default
         nullable=False,
     )
     settings: Mapped[dict] = mapped_column(

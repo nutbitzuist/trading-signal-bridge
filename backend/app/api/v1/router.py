@@ -8,6 +8,7 @@ from app.api.v1.webhooks import router as webhooks_router
 from app.api.v1.signals import router as signals_router
 from app.api.v1.accounts import router as accounts_router
 from app.api.v1.dashboard import router as dashboard_router
+from app.api.v1.admin import router as admin_router
 
 
 api_router = APIRouter()
@@ -18,3 +19,4 @@ api_router.include_router(webhooks_router)
 api_router.include_router(signals_router)
 api_router.include_router(accounts_router)
 api_router.include_router(dashboard_router)
+api_router.include_router(admin_router)
