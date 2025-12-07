@@ -27,12 +27,15 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info(f"Starting {settings.APP_NAME}...")
     logger.info(f"Environment: {settings.APP_ENV}")
+    logger.info(f"Database URL prefix: {settings.DATABASE_URL[:30]}...")
 
-    # Initialize database
-    # Note: In production, use Alembic migrations instead
-    if settings.APP_ENV == "development":
+    # Initialize database tables
+    try:
         await init_db()
-        logger.info("Database initialized")
+        logger.info("Database tables initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize database: {e}")
+        raise
 
     yield
 
