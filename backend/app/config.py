@@ -53,11 +53,18 @@ class Settings(BaseSettings):
     @classmethod
     def parse_cors_origins(cls, v):
         if isinstance(v, str):
+            # Skip empty strings
+            if not v or not v.strip():
+                return ["http://localhost:3000"]
+            # Try comma-separated first (most common for env vars)
+            if "," in v or not v.startswith("["):
+                return [origin.strip() for origin in v.split(",") if origin.strip()]
+            # Fall back to JSON parsing
             import json
             try:
                 return json.loads(v)
             except json.JSONDecodeError:
-                return [origin.strip() for origin in v.split(",")]
+                return [origin.strip() for origin in v.split(",") if origin.strip()]
         return v
 
     # Logging
