@@ -23,6 +23,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
+# Debug: Show Python version
+RUN python --version
+
 # Create non-root user
 RUN adduser --disabled-password --gecos '' appuser && \
     chown -R appuser:appuser /app
@@ -34,8 +37,5 @@ EXPOSE ${PORT:-8000}
 # Set default port
 ENV PORT=8000
 
-# Debug: Show Python version and test imports
-RUN python --version && pip list
-
-# Run the application with shell to expand PORT variable
-CMD ["sh", "-c", "echo '=== Starting Application ===' && echo 'PORT: ${PORT}' && echo 'Testing imports...' && python -c 'from app.main import app; print(\"App imported successfully\")' && echo 'Starting uvicorn...' && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Run the application
+CMD ["sh", "-c", "python -c 'print(\"Testing app import...\"); from app.main import app; print(\"App import OK\")' && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
