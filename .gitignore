@@ -87,3 +87,4 @@ secrets/
 
 # Alembic
 alembic/versions/*.pyc
+.env*.local
