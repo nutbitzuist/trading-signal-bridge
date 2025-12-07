@@ -34,6 +34,8 @@ EXPOSE ${PORT:-8000}
 # Set default port
 ENV PORT=8000
 
-# Remove Docker healthcheck - let Railway handle it
+# Debug: Show Python version and test imports
+RUN python --version && pip list
+
 # Run the application with shell to expand PORT variable
-CMD ["sh", "-c", "echo 'Starting uvicorn on port ${PORT:-8000}...' && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "echo '=== Starting Application ===' && echo 'PORT: ${PORT}' && echo 'Testing imports...' && python -c 'from app.main import app; print(\"App imported successfully\")' && echo 'Starting uvicorn...' && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
