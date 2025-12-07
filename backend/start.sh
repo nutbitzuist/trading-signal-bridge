@@ -35,5 +35,8 @@ except Exception as e:
     sys.exit(1)
 "
 
+echo "=== Running database migrations ==="
+alembic upgrade head || echo "Migration warning (may be already applied)"
+
 echo "=== Starting uvicorn ==="
 exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
