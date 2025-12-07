@@ -23,8 +23,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Debug: Show Python version
-RUN python --version
+# Make start script executable
+RUN chmod +x /app/start.sh
 
 # Create non-root user
 RUN adduser --disabled-password --gecos '' appuser && \
@@ -37,5 +37,5 @@ EXPOSE ${PORT:-8000}
 # Set default port
 ENV PORT=8000
 
-# Run the application
-CMD ["sh", "-c", "python -c 'print(\"Testing app import...\"); from app.main import app; print(\"App import OK\")' && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Run the application via start script
+CMD ["/app/start.sh"]
