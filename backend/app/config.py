@@ -23,6 +23,19 @@ class Settings(BaseSettings):
     DATABASE_POOL_SIZE: int = 20
     DATABASE_MAX_OVERFLOW: int = 10
 
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def convert_database_url(cls, v):
+        """Convert postgresql:// to postgresql+asyncpg:// for async SQLAlchemy."""
+        if isinstance(v, str) and v:
+            # Railway provides postgresql:// but asyncpg needs postgresql+asyncpg://
+            if v.startswith("postgresql://") and "+asyncpg" not in v:
+                return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+            # Also handle postgres:// variant
+            if v.startswith("postgres://") and "+asyncpg" not in v:
+                return v.replace("postgres://", "postgresql+asyncpg://", 1)
+        return v
+
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
     REDIS_SIGNAL_EXPIRE_SECONDS: int = 60
