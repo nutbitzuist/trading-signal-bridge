@@ -15,6 +15,12 @@ from app.schemas.user import (
     Token,
     RefreshTokenRequest,
 )
+from app.schemas.password_reset import (
+    ForgotPasswordRequest,
+    ForgotPasswordResponse,
+    ResetPasswordRequest,
+    ResetPasswordResponse,
+)
 from app.services.auth import AuthService
 
 
@@ -136,3 +142,50 @@ async def regenerate_webhook_secret(
     new_secret = await auth_service.regenerate_webhook_secret(current_user)
 
     return {"webhook_secret": new_secret}
+
+
+@router.post("/forgot-password", response_model=ForgotPasswordResponse)
+async def forgot_password(
+    request: ForgotPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+) -> ForgotPasswordResponse:
+    """
+    Request a password reset token.
+    
+    For security, always returns success even if email doesn't exist.
+    Currently shows token in response (no email service configured).
+    """
+    auth_service = AuthService(db)
+    token = await auth_service.create_password_reset_token_for_user(request.email)
+    
+    # Always return success message for security (don't reveal if email exists)
+    # But include token since we don't have email service yet
+    return ForgotPasswordResponse(
+        message="If an account exists with this email, a password reset link has been generated.",
+        reset_token=token,  # Remove this when email service is added
+    )
+
+
+@router.post("/reset-password", response_model=ResetPasswordResponse)
+async def reset_password(
+    request: ResetPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+) -> ResetPasswordResponse:
+    """
+    Reset password using a reset token.
+    """
+    auth_service = AuthService(db)
+    success = await auth_service.reset_password_with_token(
+        request.token,
+        request.new_password,
+    )
+    
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset token",
+        )
+    
+    return ResetPasswordResponse(
+        message="Password has been reset successfully. You can now log in with your new password.",
+    )

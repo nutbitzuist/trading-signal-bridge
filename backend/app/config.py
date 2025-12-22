@@ -50,6 +50,7 @@ class Settings(BaseSettings):
     BCRYPT_ROUNDS: int = 12
     API_KEY_LENGTH: int = 64
     WEBHOOK_SECRET_LENGTH: int = 64
+    PASSWORD_RESET_TOKEN_EXPIRE_MINUTES: int = 30
 
     # Rate Limiting
     WEBHOOK_RATE_LIMIT: int = 100  # per minute

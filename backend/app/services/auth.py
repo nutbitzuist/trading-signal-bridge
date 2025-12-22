@@ -18,6 +18,8 @@ from app.utils.security import (
     create_access_token,
     create_refresh_token,
     verify_token,
+    create_password_reset_token,
+    verify_password_reset_token,
 )
 
 
@@ -124,3 +126,38 @@ class AuthService:
         """Update user password."""
         user.password_hash = hash_password(new_password)
         await self.db.flush()
+
+    async def create_password_reset_token_for_user(self, email: str) -> Optional[str]:
+        """
+        Create a password reset token for a user.
+        
+        Returns the token if user exists, None otherwise.
+        Note: For security, callers should return a success message even if user doesn't exist.
+        """
+        user = await self.get_user_by_email(email)
+        if not user:
+            return None
+        
+        if not user.is_active:
+            return None
+        
+        return create_password_reset_token(email)
+
+    async def reset_password_with_token(self, token: str, new_password: str) -> bool:
+        """
+        Reset a user's password using a reset token.
+        
+        Returns True if successful, False otherwise.
+        """
+        email = verify_password_reset_token(token)
+        if not email:
+            return False
+        
+        user = await self.get_user_by_email(email)
+        if not user or not user.is_active:
+            return False
+        
+        user.password_hash = hash_password(new_password)
+        await self.db.flush()
+        return True
+
