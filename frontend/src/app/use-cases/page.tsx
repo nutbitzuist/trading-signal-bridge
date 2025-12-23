@@ -17,6 +17,7 @@ import {
     Percent,
     Layers,
     ArrowUpRight,
+    Settings,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -343,6 +344,185 @@ if longSignal
   "comment": "Risk_Trade"
 }`,
             notes: 'risk_percent: EA calculates lot size based on account balance and SL distance. Requires EA update. Example: 1% = risk 1% of balance on this trade.',
+        },
+        // EXISTING INDICATORS
+        {
+            id: 'supertrend-indicator',
+            title: '11. SuperTrend Indicator (Existing)',
+            description: 'Connect the popular SuperTrend indicator by KivancOzbilgic to your MT4/MT5.',
+            difficulty: 'Intermediate',
+            icon: <TrendingUp className="h-5 w-5" />,
+            features: ['Use existing indicator', 'No coding required', 'ATR-based trailing'],
+            pineScript: `// How to set up SuperTrend with Signal Bridge:
+// 
+// 1. Open TradingView and add SuperTrend indicator:
+//    https://www.tradingview.com/v/r6dAP7yi/
+//
+// 2. Click "Add Alert" (clock icon) on the chart
+//
+// 3. In the Condition dropdown, select:
+//    - SuperTrend
+//    - "Crossing Up" for BUY alerts
+//    - "Crossing Down" for SELL alerts
+//
+// 4. In the Notifications tab:
+//    - Enable "Webhook URL"
+//    - Paste: https://signals.myalgostack.com/api/v1/webhook/tradingview
+//
+// 5. In the Message field, paste the JSON below
+//    (Create 2 alerts: one for buy, one for sell)
+//
+// BUY Alert Message:
+{
+  "secret": "${webhookSecret}",
+  "symbol": "{{ticker}}",
+  "action": "buy",
+  "quantity": 0.1,
+  "comment": "SuperTrend_Buy"
+}
+
+// SELL Alert Message:
+{
+  "secret": "${webhookSecret}",
+  "symbol": "{{ticker}}",
+  "action": "sell",
+  "quantity": 0.1,
+  "comment": "SuperTrend_Sell"
+}`,
+            jsonTemplate: `{
+  "secret": "${webhookSecret}",
+  "symbol": "{{ticker}}",
+  "action": "buy",
+  "quantity": 0.1,
+  "stop_loss": "{{plot_1}}",
+  "comment": "SuperTrend_Buy"
+}`,
+            notes: 'SuperTrend plots the trailing stop level. You can use {{plot_1}} to pass the SuperTrend line as your Stop Loss. Create separate alerts for Buy and Sell conditions.',
+        },
+        {
+            id: 'gettrend-strategy',
+            title: '12. GetTrendStrategy (Existing)',
+            description: 'Use the GetTrendStrategy by YaroslavG to confirm trend direction.',
+            difficulty: 'Intermediate',
+            icon: <BarChart2 className="h-5 w-5" />,
+            features: ['Trend confirmation', 'Works with any symbol', 'Simple setup'],
+            pineScript: `// How to set up GetTrendStrategy with Signal Bridge:
+//
+// 1. Open TradingView and add GetTrendStrategy:
+//    https://www.tradingview.com/v/PHnPTxTd/
+//
+// 2. Click "Add Alert" on the chart
+//
+// 3. In the Condition dropdown, select:
+//    - GetTrendStrategy  
+//    - "Order fills only" (for entry signals)
+//
+// 4. Create alert for LONG entries:
+//    - Condition: "Long" 
+//    - Message: Use BUY JSON below
+//
+// 5. Create alert for SHORT entries:
+//    - Condition: "Short"
+//    - Message: Use SELL JSON below
+//
+// 6. Webhook URL:
+//    https://signals.myalgostack.com/api/v1/webhook/tradingview
+//
+// BUY Alert Message:
+{
+  "secret": "${webhookSecret}",
+  "symbol": "{{ticker}}",
+  "action": "buy",
+  "quantity": 0.1,
+  "comment": "GetTrend_Long"
+}
+
+// SELL Alert Message:
+{
+  "secret": "${webhookSecret}",
+  "symbol": "{{ticker}}",
+  "action": "sell",
+  "quantity": 0.1,
+  "comment": "GetTrend_Short"
+}`,
+            jsonTemplate: `{
+  "secret": "${webhookSecret}",
+  "symbol": "{{ticker}}",
+  "action": "buy",
+  "quantity": 0.1,
+  "comment": "GetTrend_Long"
+}`,
+            notes: 'GetTrendStrategy is best used as a trend filter. Consider combining with other entry signals for higher probability trades.',
+        },
+        {
+            id: 'any-existing-indicator',
+            title: '13. Any Existing Indicator/Strategy',
+            description: 'General guide to connect ANY TradingView indicator or strategy to MT4/MT5.',
+            difficulty: 'Basic',
+            icon: <Settings className="h-5 w-5" />,
+            features: ['Works with any indicator', 'Step-by-step guide', 'No Pine Script needed'],
+            pineScript: `// UNIVERSAL SETUP GUIDE
+// Works with ANY TradingView indicator or strategy!
+//
+// ═══════════════════════════════════════════════════════
+// STEP 1: Find Your Indicator's Alert Conditions
+// ═══════════════════════════════════════════════════════
+// - Click "Add Alert" (clock icon)
+// - In "Condition" dropdown, select your indicator
+// - Note what conditions are available (e.g., "Crossing Up", "Greater Than")
+//
+// ═══════════════════════════════════════════════════════
+// STEP 2: Create Buy Alert
+// ═══════════════════════════════════════════════════════
+// - Condition: Your indicator's BUY condition
+// - Message: Use BUY JSON template below
+// - Webhook: https://signals.myalgostack.com/api/v1/webhook/tradingview
+//
+// ═══════════════════════════════════════════════════════
+// STEP 3: Create Sell Alert  
+// ═══════════════════════════════════════════════════════
+// - Condition: Your indicator's SELL condition
+// - Message: Use SELL JSON template below
+// - Same webhook URL
+//
+// ═══════════════════════════════════════════════════════
+// AVAILABLE PLACEHOLDERS (use in JSON):
+// ═══════════════════════════════════════════════════════
+// {{ticker}}    → Symbol (e.g., BTCUSD)
+// {{close}}     → Current close price
+// {{open}}      → Current open price
+// {{high}}      → Current high
+// {{low}}       → Current low
+// {{volume}}    → Current volume
+// {{time}}      → Bar time
+// {{plot_0}}    → First plot value from indicator
+// {{plot_1}}    → Second plot value from indicator`,
+            jsonTemplate: `// BUY Signal:
+{
+  "secret": "${webhookSecret}",
+  "symbol": "{{ticker}}",
+  "action": "buy",
+  "quantity": 0.1,
+  "comment": "MyIndicator_Buy"
+}
+
+// SELL Signal:
+{
+  "secret": "${webhookSecret}",
+  "symbol": "{{ticker}}",
+  "action": "sell",
+  "quantity": 0.1,
+  "comment": "MyIndicator_Sell"
+}
+
+// CLOSE Position:
+{
+  "secret": "${webhookSecret}",
+  "symbol": "{{ticker}}",
+  "action": "close",
+  "comment": "MyIndicator_Exit"
+}`,
+            notes: "This guide works for ANY indicator. The key is matching your indicator's conditions to the right action (buy/sell/close). Use {{placeholders}} to pass dynamic values.",
         },
     ];
 
