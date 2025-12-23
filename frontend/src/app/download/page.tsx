@@ -437,8 +437,8 @@ export default function DownloadPage() {
                         <tbody>
                           <tr className="border-b">
                             <td className="py-2 px-3 font-mono">ServerURL</td>
-                            <td className="py-2 px-3 text-gray-600">-</td>
-                            <td className="py-2 px-3 text-gray-600">Your Signal Bridge server URL</td>
+                            <td className="py-2 px-3 text-gray-600 font-mono text-xs">https://signals.myalgostack.com/api/v1</td>
+                            <td className="py-2 px-3 text-gray-600">Pre-configured server URL (no change needed)</td>
                           </tr>
                           <tr className="border-b">
                             <td className="py-2 px-3 font-mono">ApiKey</td>
