@@ -174,6 +174,10 @@ void ProcessSignalsResponse(string response)
    
    //--- Debug: Log extracted signals
    Log("Extracted signals JSON length: " + IntegerToString(StringLen(signalsJson)));
+   
+   // Log first 100 chars of signals JSON for debugging
+   string preview = StringSubstr(signalsJson, 0, MathMin(100, StringLen(signalsJson)));
+   Log("Signals JSON preview: " + preview);
 
    if(StringLen(signalsJson) <= 2) // Empty array "[]"
    {
