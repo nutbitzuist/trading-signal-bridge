@@ -26,6 +26,8 @@ class WebhookPayload(BaseModel):
     price: Optional[Decimal] = Field(None, ge=0, description="Entry price for limit/stop orders")
     take_profit: Optional[Decimal] = Field(None, ge=0)
     stop_loss: Optional[Decimal] = Field(None, ge=0)
+    trailing_stop: Optional[Decimal] = Field(None, ge=0, description="Trailing stop in pips")
+    risk_percent: Optional[Decimal] = Field(None, ge=0, le=100, description="Risk % for lot calculation")
     comment: Optional[str] = Field(None, max_length=255)
 
 

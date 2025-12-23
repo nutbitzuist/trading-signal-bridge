@@ -10,6 +10,7 @@ import {
   LogOut,
   Users,
   Download,
+  BookOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -19,6 +20,7 @@ const navigation = [
   { name: 'Signals', href: '/signals', icon: Signal },
   { name: 'Accounts', href: '/accounts', icon: Wallet },
   { name: 'EA Download', href: '/download', icon: Download },
+  { name: 'Use Cases', href: '/use-cases', icon: BookOpen },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
