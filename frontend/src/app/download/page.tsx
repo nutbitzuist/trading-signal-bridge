@@ -536,11 +536,11 @@ export default function DownloadPage() {
                           </p>
                           <div className="bg-gray-100 p-2 rounded mt-2 flex items-center justify-between">
                             <code className="text-sm break-all">
-                              {API_URL}/webhooks/tradingview?secret={user?.webhook_secret || 'YOUR_SECRET'}
+                              {API_URL}/webhook/tradingview
                             </code>
                             <button
                               onClick={() => copyToClipboard(
-                                `${API_URL}/webhooks/tradingview?secret=${user?.webhook_secret || ''}`,
+                                `${API_URL}/webhook/tradingview`,
                                 'tvwebhook'
                               )}
                               className="ml-2 text-blue-600 hover:text-blue-800 shrink-0"
@@ -552,6 +552,9 @@ export default function DownloadPage() {
                               )}
                             </button>
                           </div>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Note: The secret is included in the message body, not in the URL
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-start gap-3">
@@ -561,19 +564,43 @@ export default function DownloadPage() {
                         <div>
                           <p className="font-medium">Set Alert Message (JSON)</p>
                           <p className="text-sm text-gray-600">
-                            In the "Message" field, use this JSON format:
+                            In the "Message" field, use this JSON format (include your secret!):
                           </p>
                           <pre className="bg-gray-900 text-gray-100 p-3 rounded mt-2 text-xs overflow-x-auto">
-{`{
+                            {`{
+  "secret": "${user?.webhook_secret || 'YOUR_WEBHOOK_SECRET'}",
   "symbol": "{{ticker}}",
   "action": "buy",
+  "quantity": 0.1,
   "price": {{close}},
-  "lot_size": 0.1,
   "stop_loss": {{close}} - 50 * {{mintick}},
   "take_profit": {{close}} + 100 * {{mintick}},
   "comment": "TV Signal"
 }`}
                           </pre>
+                          <button
+                            onClick={() => copyToClipboard(
+                              `{
+  "secret": "${user?.webhook_secret || 'YOUR_WEBHOOK_SECRET'}",
+  "symbol": "{{ticker}}",
+  "action": "buy",
+  "quantity": 0.1,
+  "price": {{close}},
+  "stop_loss": {{close}} - 50 * {{mintick}},
+  "take_profit": {{close}} + 100 * {{mintick}},
+  "comment": "TV Signal"
+}`,
+                              'alertjson'
+                            )}
+                            className="mt-2 text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                          >
+                            {copied === 'alertjson' ? (
+                              <CheckCircle className="h-4 w-4 text-green-600" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                            <span>{copied === 'alertjson' ? 'Copied!' : 'Copy JSON'}</span>
+                          </button>
                         </div>
                       </div>
                       <div className="flex items-start gap-3">
@@ -586,11 +613,13 @@ export default function DownloadPage() {
                             Use these values for the "action" field:
                           </p>
                           <ul className="text-sm text-gray-600 list-disc ml-4 mt-1">
-                            <li><code className="bg-gray-100 px-1 rounded">buy</code> - Open buy order</li>
-                            <li><code className="bg-gray-100 px-1 rounded">sell</code> - Open sell order</li>
-                            <li><code className="bg-gray-100 px-1 rounded">close_buy</code> - Close buy positions</li>
-                            <li><code className="bg-gray-100 px-1 rounded">close_sell</code> - Close sell positions</li>
-                            <li><code className="bg-gray-100 px-1 rounded">close_all</code> - Close all positions</li>
+                            <li><code className="bg-gray-100 px-1 rounded">buy</code> - Open market buy order</li>
+                            <li><code className="bg-gray-100 px-1 rounded">sell</code> - Open market sell order</li>
+                            <li><code className="bg-gray-100 px-1 rounded">buy_limit</code> / <code className="bg-gray-100 px-1 rounded">sell_limit</code> - Limit orders</li>
+                            <li><code className="bg-gray-100 px-1 rounded">buy_stop</code> / <code className="bg-gray-100 px-1 rounded">sell_stop</code> - Stop orders</li>
+                            <li><code className="bg-gray-100 px-1 rounded">close</code> - Close all positions for symbol</li>
+                            <li><code className="bg-gray-100 px-1 rounded">close_partial</code> - Partial close</li>
+                            <li><code className="bg-gray-100 px-1 rounded">modify</code> - Modify TP/SL</li>
                           </ul>
                         </div>
                       </div>
