@@ -55,6 +55,12 @@ async def login(
     """
     Authenticate user and return JWT tokens.
     """
+    # Import logger
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info(f"Login attempt for email: {credentials.email}")
+    
     auth_service = AuthService(db)
 
     user = await auth_service.authenticate_user(
@@ -63,12 +69,14 @@ async def login(
     )
 
     if not user:
+        logger.warning(f"Login failed for email: {credentials.email} - Invalid credentials")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    logger.info(f"Login successful for user: {user.id}")
     return auth_service.create_tokens(user)
 
 

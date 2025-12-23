@@ -43,8 +43,16 @@ async def get_pending_signals(
     """
     processor = SignalProcessor(db)
 
+    # Log entry
+    logger.info(f"Checking pending signals for account {account.id}")
+
     # Get pending signals
     signals = await processor.get_pending_signals(account.id)
+    
+    if signals:
+        logger.info(f"Found {len(signals)} pending signals for account {account.id}: {[str(s.id) for s in signals]}")
+    else:
+        logger.debug(f"No pending signals for account {account.id}")
 
     # Convert to response format and mark as sent
     pending_signals = []
@@ -64,6 +72,7 @@ async def get_pending_signals(
         )
         # Mark as sent
         await processor.mark_signal_sent(signal.id)
+        logger.info(f"Marked signal {signal.id} as sent")
 
     return PendingSignalsResponse(
         signals=pending_signals,

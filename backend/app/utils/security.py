@@ -6,32 +6,37 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 
 from app.config import settings
 
-# Password hashing context
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto",
-    bcrypt__rounds=settings.BCRYPT_ROUNDS,
-)
-
+# Password hashing
 
 def hash_password(password: str) -> str:
     """Hash a password using bcrypt."""
     # Ensure password is truncated to 72 bytes (bcrypt limitation)
     if isinstance(password, str):
-        password = password.encode('utf-8')[:72].decode('utf-8', errors='ignore')
-    return pwd_context.hash(password)
+        password = password.encode('utf-8')[:72]
+    elif isinstance(password, bytes):
+        password = password[:72]
+        
+    # Generate salt and hash
+    hashed = bcrypt.hashpw(password, bcrypt.gensalt(rounds=settings.BCRYPT_ROUNDS))
+    return hashed.decode('utf-8')
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its hash."""
     # Ensure password is truncated to 72 bytes (bcrypt limitation)
     if isinstance(plain_password, str):
-        plain_password = plain_password.encode('utf-8')[:72].decode('utf-8', errors='ignore')
-    return pwd_context.verify(plain_password, hashed_password)
+        plain_password = plain_password.encode('utf-8')[:72]
+    elif isinstance(plain_password, bytes):
+        plain_password = plain_password[:72]
+
+    if isinstance(hashed_password, str):
+        hashed_password = hashed_password.encode('utf-8')
+        
+    return bcrypt.checkpw(plain_password, hashed_password)
 
 
 def generate_api_key() -> str:
