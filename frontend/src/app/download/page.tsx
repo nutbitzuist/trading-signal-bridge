@@ -564,31 +564,31 @@ export default function DownloadPage() {
                         <div>
                           <p className="font-medium">Set Alert Message (JSON)</p>
                           <p className="text-sm text-gray-600">
-                            In the "Message" field, use this JSON format (include your secret!):
+                            In the &quot;Message&quot; field, paste this exact JSON (replace YOUR_SYMBOL with your broker&apos;s symbol):
                           </p>
                           <pre className="bg-gray-900 text-gray-100 p-3 rounded mt-2 text-xs overflow-x-auto">
                             {`{
   "secret": "${user?.webhook_secret || 'YOUR_WEBHOOK_SECRET'}",
-  "symbol": "{{ticker}}",
+  "symbol": "XAUUSD",
   "action": "buy",
   "quantity": 0.1,
-  "price": {{close}},
-  "stop_loss": {{close}} - 50 * {{mintick}},
-  "take_profit": {{close}} + 100 * {{mintick}},
-  "comment": "TV Signal"
+  "comment": "TradingView"
 }`}
                           </pre>
+                          <p className="text-xs text-yellow-600 mt-2 font-medium">
+                            ⚠️ Important: Do NOT use math operations like &quot;{{ close }} * 1.02&quot; - they are invalid in JSON!
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Tip: Use your broker&apos;s exact symbol (e.g., XAUUSDm instead of XAUUSD if that&apos;s what MT4 shows)
+                          </p>
                           <button
                             onClick={() => copyToClipboard(
                               `{
   "secret": "${user?.webhook_secret || 'YOUR_WEBHOOK_SECRET'}",
-  "symbol": "{{ticker}}",
+  "symbol": "XAUUSD",
   "action": "buy",
   "quantity": 0.1,
-  "price": {{close}},
-  "stop_loss": {{close}} - 50 * {{mintick}},
-  "take_profit": {{close}} + 100 * {{mintick}},
-  "comment": "TV Signal"
+  "comment": "TradingView"
 }`,
                               'alertjson'
                             )}
