@@ -133,8 +133,14 @@ void OnTimer()
       return;
    }
 
+   //--- Manage break-even stops
+   ManageBreakEven();
+
    //--- Pool for trailing stop
    ManageTrailingStop();
+
+   //--- Check weekend close
+   CheckWeekendClose();
 
    //--- Poll for signals
    PollSignals();
@@ -974,7 +980,83 @@ void ManageTrailingStop()
          }
       }
    }
+}
 
+//+------------------------------------------------------------------+
+//| Manage Break-Even Stops                                            |
+//+------------------------------------------------------------------+
+void ManageBreakEven()
+{
+   if(!UseBreakEven) return;
+
+   int total = PositionsTotal();
+   for(int i = total - 1; i >= 0; i--)
+   {
+      if(!PositionInfo.SelectByIndex(i)) continue;
+      if(PositionInfo.Magic() != MagicNumber) continue;
+
+      string symbol = PositionInfo.Symbol();
+      double point = SymbolInfoDouble(symbol, SYMBOL_POINT);
+      int digits = (int)SymbolInfoInteger(symbol, SYMBOL_DIGITS);
+      double pipSize = (digits == 3 || digits == 5) ? 10 * point : point;
+      
+      double breakEvenDist = BreakEvenPips * pipSize;
+      double lockDist = BreakEvenLockPips * pipSize;
+
+      if(PositionInfo.PositionType() == POSITION_TYPE_BUY)
+      {
+         double bid = SymbolInfoDouble(symbol, SYMBOL_BID);
+         double profit = bid - PositionInfo.PriceOpen();
+         if(profit >= breakEvenDist && PositionInfo.StopLoss() < PositionInfo.PriceOpen())
+         {
+            double newSL = NormalizeDouble(PositionInfo.PriceOpen() + lockDist, digits);
+            if(Trade.PositionModify(PositionInfo.Ticket(), newSL, PositionInfo.TakeProfit()))
+               Log("Break-Even set for Buy Ticket " + IntegerToString(PositionInfo.Ticket()));
+         }
+      }
+      else if(PositionInfo.PositionType() == POSITION_TYPE_SELL)
+      {
+         double ask = SymbolInfoDouble(symbol, SYMBOL_ASK);
+         double profit = PositionInfo.PriceOpen() - ask;
+         if(profit >= breakEvenDist && (PositionInfo.StopLoss() > PositionInfo.PriceOpen() || PositionInfo.StopLoss() == 0))
+         {
+            double newSL = NormalizeDouble(PositionInfo.PriceOpen() - lockDist, digits);
+            if(Trade.PositionModify(PositionInfo.Ticket(), newSL, PositionInfo.TakeProfit()))
+               Log("Break-Even set for Sell Ticket " + IntegerToString(PositionInfo.Ticket()));
+         }
+      }
+   }
+}
+
+//+------------------------------------------------------------------+
+//| Check and close positions before weekend                           |
+//+------------------------------------------------------------------+
+void CheckWeekendClose()
+{
+   if(!CloseBeforeWeekend) return;
+   
+   MqlDateTime dt;
+   TimeToStruct(TimeCurrent(), dt);
+   
+   if(dt.day_of_week == 5 && dt.hour >= FridayCloseHour)
+   {
+      int closedCount = 0;
+      int total = PositionsTotal();
+      for(int i = total - 1; i >= 0; i--)
+      {
+         if(!PositionInfo.SelectByIndex(i)) continue;
+         if(PositionInfo.Magic() != MagicNumber) continue;
+         
+         if(Trade.PositionClose(PositionInfo.Ticket()))
+         {
+            Log("Weekend Close: Closed Ticket " + IntegerToString(PositionInfo.Ticket()));
+            closedCount++;
+         }
+      }
+      if(closedCount > 0)
+         Log("Weekend Close: Total " + IntegerToString(closedCount) + " positions closed");
+   }
+}
 
 //+------------------------------------------------------------------+
 //| Expert tick function (not used, using timer instead)               |
