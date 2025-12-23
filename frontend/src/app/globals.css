@@ -74,3 +74,10 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Neo-Brutalist utilities */
+@layer utilities {
+  .border-3 {
+    border-width: 3px;
+  }
+}
