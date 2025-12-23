@@ -1,8 +1,9 @@
 """
 Webhook endpoints for receiving trading signals from TradingView.
 """
+import json
 import logging
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 @router.post("/tradingview", response_model=WebhookResponse)
 async def receive_tradingview_webhook(
-    payload: WebhookPayload,
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> WebhookResponse:
     """
@@ -26,7 +27,44 @@ async def receive_tradingview_webhook(
 
     The webhook secret is used to identify the user.
     Signals are created for all active MT accounts if no account_id is specified.
+    
+    Note: TradingView sends webhooks as text/plain, not application/json,
+    so we need to parse the raw body manually.
     """
+    # Get raw body and parse JSON (TradingView sends as text/plain)
+    try:
+        body = await request.body()
+        body_str = body.decode('utf-8').strip()
+        logger.info(f"Received webhook body: {body_str[:200]}...")  # Log first 200 chars
+        
+        # Parse JSON from body
+        try:
+            payload_data = json.loads(body_str)
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid JSON in webhook body: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid JSON: {str(e)}",
+            )
+        
+        # Validate with Pydantic schema
+        try:
+            payload = WebhookPayload(**payload_data)
+        except Exception as e:
+            logger.error(f"Payload validation error: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid payload: {str(e)}",
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error reading webhook body: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Error reading request body",
+        )
+
     # Authenticate by webhook secret
     auth_service = AuthService(db)
     user = await auth_service.get_user_by_webhook_secret(payload.secret)
@@ -91,3 +129,4 @@ async def receive_tradingview_webhook(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error processing signal",
         )
+
