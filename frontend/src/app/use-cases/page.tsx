@@ -518,13 +518,13 @@ if longSignal
                         <CardContent>
                             <div className="bg-gray-100 p-3 rounded-lg flex items-center justify-between">
                                 <code className="text-sm break-all">
-                                    https://backend-production-d908.up.railway.app/api/v1/webhook/tradingview
+                                    https://signals.myalgostack.com/api/v1/webhook/tradingview
                                 </code>
                                 <Button
                                     size="sm"
                                     variant="outline"
                                     onClick={() => copyToClipboard(
-                                        'https://backend-production-d908.up.railway.app/api/v1/webhook/tradingview',
+                                        'https://signals.myalgostack.com/api/v1/webhook/tradingview',
                                         'webhook-url'
                                     )}
                                     className="ml-2 shrink-0"

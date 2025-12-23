@@ -1,15 +1,15 @@
 //+------------------------------------------------------------------+
 //|                                               SignalBridge.mq4   |
 //|                                    Trading Signal Bridge Client  |
-//|                                         https://your-server.com  |
+//|                                  https://signals.myalgostack.com  |
 //+------------------------------------------------------------------+
 #property copyright "Trading Signal Bridge"
-#property link      "https://your-server.com"
-#property version   "1.00"
+#property link      "https://signals.myalgostack.com"
+#property version   "2.00"
 #property strict
 
 //--- Input Parameters
-input string   ServerURL          = "https://your-server.com/api/v1";  // Server URL
+input string   ServerURL          = "https://signals.myalgostack.com/api/v1";  // Server URL (pre-configured)
 input string   ApiKey             = "";                                  // API Key (from dashboard)
 input int      PollIntervalSec    = 2;                                   // Poll interval (seconds)
 input double   MaxLotSize         = 1.0;                                 // Maximum lot size
@@ -19,6 +19,19 @@ input int      MagicNumber        = 123456;                              // Magi
 input bool     EnableTakeProfit   = true;                                // Enable take profit
 input bool     EnableStopLoss     = true;                                // Enable stop loss
 input bool     EnableLogging      = true;                                // Enable detailed logging
+input string   Group_Risk         = "=== Risk Management ===";           // Risk Management Settings
+input bool     UseRiskBasedSizing = false;                               // Enable risk-based position sizing
+input double   RiskPercent        = 1.0;                                 // Risk percent per trade
+input double   MaxDailyLossPercent= 3.0;                                 // Max daily loss percent (0 to disable)
+input bool     UseDailyDrawdown   = false;                               // Enable max daily drawdown protection
+input string   Group_Filters      = "=== Filters ===";                   // Filter Settings
+input bool     UseTimeFilter      = false;                               // Enable time filter
+input int      StartHour          = 8;                                   // Start hour (Server time)
+input int      EndHour            = 20;                                  // End hour (Server time)
+input double   MaxSpreadPips      = 5.0;                                 // Maximum allowed spread in pips
+input string   Group_Trailing     = "=== Trailing Stop ===";             // Trailing Stop Settings
+input int      TrailingStopPips   = 0;                                   // Trailing stop in pips (0 to disable)
+input int      TrailingStepPips   = 5;                                   // Trailing step in pips
 
 //--- Global Variables
 string         gPendingEndpoint;
@@ -96,6 +109,9 @@ void OnTimer()
       return;
    }
 
+   //--- Pool for trailing stop
+   ManageTrailingStop();
+
    //--- Poll for signals
    PollSignals();
 }
@@ -171,8 +187,42 @@ void ProcessSignal(string signalJson)
       return;
    }
 
+   //--- Check filters
+   if(!CheckFilters(mtSymbol))
+   {
+      ReportResult(signalId, false, 0, 0, 0, 0, 133, "Trade blocked by filters");
+      return;
+   }
+
    //--- Determine lot size
    double lots = quantity;
+
+   //--- Risk based sizing
+   if(UseRiskBasedSizing)
+   {
+      double slDist = 0;
+      if(stopLoss > 0)
+         slDist = MathAbs(price - stopLoss);
+      else if(action == "buy" && stopLoss > 0)
+         slDist = MathAbs(price - stopLoss);
+      else if(action == "sell" && stopLoss > 0)
+         slDist = MathAbs(stopLoss - price);
+         
+      // If signal didn't have SL, try to find a default distance logic or fail
+      // For now, only calculate if SL is explicit in signal. 
+      // User can also implement default SL distance logic here if needed.
+       
+      if(slDist > 0)
+      {
+         lots = CalculateRiskLots(mtSymbol, RiskPercent, slDist);
+         Log("Risk-based sizing: " + DoubleToString(lots, 2) + " lots (" + DoubleToString(RiskPercent) + "%)");
+      }
+      else
+      {
+         Log("Warning: Cannot use risk-based sizing without Stop Loss. Using signal quantity.");
+      }
+   }
+
    if(lots <= 0) lots = DefaultLotSize;
    if(lots > MaxLotSize) lots = MaxLotSize;
 
@@ -745,6 +795,168 @@ void Log(string message)
    if(EnableLogging)
       Print("[SignalBridge] " + message);
 }
+
+//+------------------------------------------------------------------+
+//| Calculate lots based on risk %                                     |
+//+------------------------------------------------------------------+
+double CalculateRiskLots(string symbol, double riskPercent, double slDistance)
+{
+   if(slDistance <= 0) return 0;
+
+   double accountBalance = AccountBalance();
+   double riskAmount = accountBalance * (riskPercent / 100.0);
+   double tickValue = MarketInfo(symbol, MODE_TICKVALUE);
+   double tickSize = MarketInfo(symbol, MODE_TICKSIZE);
+   double point = MarketInfo(symbol, MODE_POINT);
+
+   // Adjust tick value for 5/3 digit brokers if needed, but MODE_TICKVALUE usually handles it.
+   // Important: MODE_TICKVALUE is per lot per tick. 
+   
+   // Formula: Risk = Lots * (SL_Distance / TickSize) * TickValue
+   // Lots = Risk / ((SL_Distance / TickSize) * TickValue)
+   
+   if(tickSize == 0 || tickValue == 0) return 0;
+   
+   double lots = riskAmount / ((slDistance / tickSize) * tickValue);
+   return lots;
+}
+
+//+------------------------------------------------------------------+
+//| Check trade filters                                                |
+//+------------------------------------------------------------------+
+bool CheckFilters(string symbol)
+{
+   // 1. Time Filter
+   if(UseTimeFilter)
+   {
+      int currentHour = Hour();
+      if(currentHour < StartHour || currentHour >= EndHour)
+      {
+         Log("Filter: Time " + IntegerToString(currentHour) + "h outside allowed hours (" + IntegerToString(StartHour) + "-" + IntegerToString(EndHour) + ")");
+         return false;
+      }
+   }
+
+   // 2. Spread Filter
+   double spread = MarketInfo(symbol, MODE_SPREAD); // Returns in points
+   double point = MarketInfo(symbol, MODE_POINT);
+   double spreadPips = spread * point; // Actually MODE_SPREAD returns points (e.g., 20 for 2 pips on 5-digit).
+   
+   // Adjust for 5-digit brokers (1 pip = 10 points)
+   // Usually we want inputs in Pips.
+   // Let's assume standard pip definition: 0.0001 for non-JPY, 0.01 for JPY.
+   // MarketInfo(MODE_SPREAD) is in points. 
+   
+   // If input MaxSpreadPips is 5.0, and we have 5-digit broker, that's 50 points.
+   // Point check:
+   int digits = (int)MarketInfo(symbol, MODE_DIGITS);
+   double pipSize = (digits == 3 || digits == 5) ? 10 * point : point;
+   
+   double currentSpreadPips = spread * point / pipSize;
+   
+   if(currentSpreadPips > MaxSpreadPips)
+   {
+      Log("Filter: Spread " + DoubleToString(currentSpreadPips, 1) + " > Max " + DoubleToString(MaxSpreadPips, 1));
+      return false;
+   }
+
+   // 3. Max Daily Drawdown
+   if(UseDailyDrawdown)
+   {
+      double dailyProfit = GetDailyProfit();
+      double startBalance = AccountBalance() - dailyProfit; // Approx start balance
+      double maxLoss = startBalance * (MaxDailyLossPercent / 100.0);
+      
+      if(dailyProfit < -maxLoss)
+      {
+         Log("Filter: Max daily drawdown reached (" + DoubleToString(dailyProfit, 2) + " < -" + DoubleToString(maxLoss, 2) + ")");
+         return false;
+      }
+   }
+
+   return true;
+}
+
+//+------------------------------------------------------------------+
+//| Get daily profit                                                   |
+//+------------------------------------------------------------------+
+double GetDailyProfit()
+{
+   double profit = 0;
+   datetime startOfDay = iTime(NULL, PERIOD_D1, 0); // Start of current day server time
+
+   for(int i = 0; i < OrdersHistoryTotal(); i++)
+   {
+      if(OrderSelect(i, SELECT_BY_POS, MODE_HISTORY))
+      {
+         if(OrderMagicNumber() == MagicNumber && OrderCloseTime() >= startOfDay)
+         {
+            profit += OrderProfit() + OrderCommission() + OrderSwap();
+         }
+      }
+   }
+   
+   // Add floating profit of open positions too? Usually drawdown limits include closed loss.
+   // Let's stick to closed P/L for now as a "Stop Trading" trigger. 
+   // Users often want "Daily Loss Limit" on closed trades.
+   
+   return profit;
+}
+
+//+------------------------------------------------------------------+
+//| Manage Trailing Stop                                               |
+//+------------------------------------------------------------------+
+void ManageTrailingStop()
+{
+   if(TrailingStopPips <= 0) return;
+
+   for(int i = 0; i < OrdersTotal(); i++)
+   {
+      if(!OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) continue;
+      if(OrderMagicNumber() != MagicNumber) continue;
+      if(OrderType() > OP_SELL) continue; // Skip pending
+
+      string symbol = OrderSymbol();
+      double point = MarketInfo(symbol, MODE_POINT);
+      int digits = (int)MarketInfo(symbol, MODE_DIGITS);
+      
+      // Calculate Pip size
+      double pipSize = (digits == 3 || digits == 5) ? 10 * point : point;
+      
+      double trailingStopDist = TrailingStopPips * pipSize;
+      double trailingStepDist = TrailingStepPips * pipSize;
+      
+      if(OrderType() == OP_BUY)
+      {
+         double newSL = NormalizeDouble(Bid - trailingStopDist, digits);
+         if(newSL > OrderStopLoss() + trailingStepDist && newSL > OrderOpenPrice()) // Only trail profit? Or trail everything? Usually trail profit.
+         {
+             // Basic trailing: Move SL up if price moves up.
+             // Check if price > OpenPrice + Trailing (to ensure we are in profit start trailing? not specified, assume standard trailing)
+             // Standard: If (Bid - OpenPrice) > TrailingStop, then set SL. 
+             // Let's implement simpler logic: Always maintain distance if price moves favorably.
+             
+             if(newSL > OrderStopLoss())
+             {
+                if(OrderModify(OrderTicket(), OrderOpenPrice(), newSL, OrderTakeProfit(), 0, clrBlue))
+                   Log("Trailing Stop updated for Ticket " + IntegerToString(OrderTicket()));
+             }
+         }
+      }
+      else if(OrderType() == OP_SELL)
+      {
+         double newSL = NormalizeDouble(Ask + trailingStopDist, digits);
+         if((OrderStopLoss() == 0 || newSL < OrderStopLoss() - trailingStepDist) && newSL < OrderOpenPrice())
+         {
+             if(OrderStopLoss() == 0 || newSL < OrderStopLoss())
+             {
+                if(OrderModify(OrderTicket(), OrderOpenPrice(), newSL, OrderTakeProfit(), 0, clrBlue))
+                   Log("Trailing Stop updated for Ticket " + IntegerToString(OrderTicket()));
+             }
+         }
+      }
+   }
+
 
 //+------------------------------------------------------------------+
 //| Expert tick function (not used, using timer instead)               |

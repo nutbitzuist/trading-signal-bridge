@@ -1,18 +1,18 @@
 //+------------------------------------------------------------------+
 //|                                               SignalBridge.mq5   |
 //|                                    Trading Signal Bridge Client  |
-//|                                         https://your-server.com  |
+//|                                  https://signals.myalgostack.com  |
 //+------------------------------------------------------------------+
 #property copyright "Trading Signal Bridge"
-#property link      "https://your-server.com"
-#property version   "1.00"
+#property link      "https://signals.myalgostack.com"
+#property version   "2.00"
 
 #include <Trade\Trade.mqh>
 #include <Trade\PositionInfo.mqh>
 #include <Trade\OrderInfo.mqh>
 
 //--- Input Parameters
-input string   ServerURL          = "https://your-server.com/api/v1";  // Server URL
+input string   ServerURL          = "https://signals.myalgostack.com/api/v1";  // Server URL (pre-configured)
 input string   ApiKey             = "";                                  // API Key (from dashboard)
 input int      PollIntervalSec    = 2;                                   // Poll interval (seconds)
 input double   MaxLotSize         = 1.0;                                 // Maximum lot size
@@ -22,6 +22,19 @@ input ulong    MagicNumber        = 123456;                              // Magi
 input bool     EnableTakeProfit   = true;                                // Enable take profit
 input bool     EnableStopLoss     = true;                                // Enable stop loss
 input bool     EnableLogging      = true;                                // Enable detailed logging
+input string   Group_Risk         = "=== Risk Management ===";           // Risk Management Settings
+input bool     UseRiskBasedSizing = false;                               // Enable risk-based position sizing
+input double   RiskPercent        = 1.0;                                 // Risk percent per trade
+input double   MaxDailyLossPercent= 3.0;                                 // Max daily loss percent (0 to disable)
+input bool     UseDailyDrawdown   = false;                               // Enable max daily drawdown protection
+input string   Group_Filters      = "=== Filters ===";                   // Filter Settings
+input bool     UseTimeFilter      = false;                               // Enable time filter
+input int      StartHour          = 8;                                   // Start hour (Server time)
+input int      EndHour            = 20;                                  // End hour (Server time)
+input double   MaxSpreadPips      = 5.0;                                 // Maximum allowed spread in pips
+input string   Group_Trailing     = "=== Trailing Stop ===";             // Trailing Stop Settings
+input int      TrailingStopPips   = 0;                                   // Trailing stop in pips (0 to disable)
+input int      TrailingStepPips   = 5;                                   // Trailing step in pips
 
 //--- Global Variables
 string         gPendingEndpoint;
@@ -110,6 +123,9 @@ void OnTimer()
       return;
    }
 
+   //--- Pool for trailing stop
+   ManageTrailingStop();
+
    //--- Poll for signals
    PollSignals();
 }
@@ -185,8 +201,38 @@ void ProcessSignal(string signalJson)
       return;
    }
 
+   //--- Check filters
+   if(!CheckFilters(mtSymbol))
+   {
+      ReportResult(signalId, false, 0, 0, 0, 0, TRADE_RETCODE_REJECT, "Trade blocked by filters");
+      return;
+   }
+
    //--- Determine lot size
    double lots = quantity;
+
+   //--- Risk based sizing
+   if(UseRiskBasedSizing)
+   {
+      double slDist = 0;
+      if(stopLoss > 0)
+         slDist = MathAbs(price - stopLoss);
+      else if(action == "buy" && stopLoss > 0)
+         slDist = MathAbs(price - stopLoss);
+      else if(action == "sell" && stopLoss > 0)
+         slDist = MathAbs(stopLoss - price);
+         
+      if(slDist > 0)
+      {
+         lots = CalculateRiskLots(mtSymbol, RiskPercent, slDist);
+         Log("Risk-based sizing: " + DoubleToString(lots, 2) + " lots (" + DoubleToString(RiskPercent) + "%)");
+      }
+      else
+      {
+         Log("Warning: Cannot use risk-based sizing without Stop Loss. Using signal quantity.");
+      }
+   }
+
    if(lots <= 0) lots = DefaultLotSize;
    if(lots > MaxLotSize) lots = MaxLotSize;
 
@@ -760,6 +806,165 @@ void Log(string message)
    if(EnableLogging)
       Print("[SignalBridge] " + message);
 }
+
+//+------------------------------------------------------------------+
+//| Calculate lots based on risk %                                     |
+//+------------------------------------------------------------------+
+double CalculateRiskLots(string symbol, double riskPercent, double slDistance)
+{
+   if(slDistance <= 0) return 0;
+
+   double accountBalance = AccountInfoDouble(ACCOUNT_BALANCE);
+   double riskAmount = accountBalance * (riskPercent / 100.0);
+   double tickValue = SymbolInfoDouble(symbol, SYMBOL_TRADE_TICK_VALUE);
+   double tickSize = SymbolInfoDouble(symbol, SYMBOL_TRADE_TICK_SIZE);
+   
+   if(tickSize == 0 || tickValue == 0) return 0;
+   
+   double lots = riskAmount / ((slDistance / tickSize) * tickValue);
+   return lots;
+}
+
+//+------------------------------------------------------------------+
+//| Check trade filters                                                |
+//+------------------------------------------------------------------+
+bool CheckFilters(string symbol)
+{
+   // 1. Time Filter
+   if(UseTimeFilter)
+   {
+      datetime currentTime = TimeCurrent();
+      MqlDateTime tm;
+      TimeToStruct(currentTime, tm);
+      int currentHour = tm.hour;
+      
+      if(currentHour < StartHour || currentHour >= EndHour)
+      {
+         Log("Filter: Time " + IntegerToString(currentHour) + "h outside allowed hours (" + IntegerToString(StartHour) + "-" + IntegerToString(EndHour) + ")");
+         return false;
+      }
+   }
+
+   // 2. Spread Filter
+   long spread = SymbolInfoInteger(symbol, SYMBOL_SPREAD); // Returns in points
+   double point = SymbolInfoDouble(symbol, SYMBOL_POINT);
+   
+   // Adjust for 5-digit brokers (points vs pips)
+   int digits = (int)SymbolInfoInteger(symbol, SYMBOL_DIGITS);
+   double pipSize = (digits == 3 || digits == 5) ? 10 * point : point;
+   
+   double spreadPips = (double)spread * point / pipSize;
+   
+   if(spreadPips > MaxSpreadPips)
+   {
+      Log("Filter: Spread " + DoubleToString(spreadPips, 1) + " > Max " + DoubleToString(MaxSpreadPips, 1));
+      return false;
+   }
+
+   // 3. Max Daily Drawdown
+   if(UseDailyDrawdown)
+   {
+      double dailyProfit = GetDailyProfit();
+      double startBalance = AccountInfoDouble(ACCOUNT_BALANCE) - dailyProfit; 
+      double maxLoss = startBalance * (MaxDailyLossPercent / 100.0);
+      
+      if(dailyProfit < -maxLoss)
+      {
+         Log("Filter: Max daily drawdown reached (" + DoubleToString(dailyProfit, 2) + " < -" + DoubleToString(maxLoss, 2) + ")");
+         return false;
+      }
+   }
+
+   return true;
+}
+
+//+------------------------------------------------------------------+
+//| Get daily profit                                                   |
+//+------------------------------------------------------------------+
+double GetDailyProfit()
+{
+   double profit = 0;
+   datetime currentTime = TimeCurrent();
+   datetime startOfDay = currentTime - (currentTime % 86400); // Start of current day server time (00:00:00)
+   
+   if(HistorySelect(startOfDay, currentTime))
+   {
+      int deals = HistoryDealsTotal();
+      for(int i = 0; i < deals; i++)
+      {
+         ulong ticket = HistoryDealGetTicket(i);
+         if(ticket > 0)
+         {
+            long magic = 0;
+            if(HistoryDealGetInteger(ticket, DEAL_MAGIC, magic))
+            {
+               if(magic == MagicNumber)
+               {
+                  profit += HistoryDealGetDouble(ticket, DEAL_PROFIT) + 
+                            HistoryDealGetDouble(ticket, DEAL_COMMISSION) + 
+                            HistoryDealGetDouble(ticket, DEAL_SWAP);
+               }
+            }
+         }
+      }
+   }
+   
+   return profit;
+}
+
+//+------------------------------------------------------------------+
+//| Manage Trailing Stop                                               |
+//+------------------------------------------------------------------+
+void ManageTrailingStop()
+{
+   if(TrailingStopPips <= 0) return;
+
+   int total = PositionsTotal();
+   for(int i = total - 1; i >= 0; i--)
+   {
+      if(!PositionInfo.SelectByIndex(i)) continue;
+      if(PositionInfo.Magic() != MagicNumber) continue;
+
+      string symbol = PositionInfo.Symbol();
+      double point = SymbolInfoDouble(symbol, SYMBOL_POINT);
+      int digits = (int)SymbolInfoInteger(symbol, SYMBOL_DIGITS);
+      
+      // Calculate Pip size
+      double pipSize = (digits == 3 || digits == 5) ? 10 * point : point;
+      
+      double trailingStopDist = TrailingStopPips * pipSize;
+      double trailingStepDist = TrailingStepPips * pipSize;
+      
+      if(PositionInfo.PositionType() == POSITION_TYPE_BUY)
+      {
+         double bid = SymbolInfoDouble(symbol, SYMBOL_BID);
+         double newSL = NormalizeDouble(bid - trailingStopDist, digits);
+         
+         if(newSL > PositionInfo.StopLoss() + trailingStepDist && newSL > PositionInfo.PriceOpen())
+         {
+             if(newSL > PositionInfo.StopLoss())
+             {
+                if(Trade.PositionModify(PositionInfo.Ticket(), newSL, PositionInfo.TakeProfit()))
+                   Log("Trailing Stop updated for Ticket " + IntegerToString(PositionInfo.Ticket()));
+             }
+         }
+      }
+      else if(PositionInfo.PositionType() == POSITION_TYPE_SELL)
+      {
+         double ask = SymbolInfoDouble(symbol, SYMBOL_ASK);
+         double newSL = NormalizeDouble(ask + trailingStopDist, digits);
+         
+         if((PositionInfo.StopLoss() == 0 || newSL < PositionInfo.StopLoss() - trailingStepDist) && newSL < PositionInfo.PriceOpen())
+         {
+             if(PositionInfo.StopLoss() == 0 || newSL < PositionInfo.StopLoss())
+             {
+                if(Trade.PositionModify(PositionInfo.Ticket(), newSL, PositionInfo.TakeProfit()))
+                   Log("Trailing Stop updated for Ticket " + IntegerToString(PositionInfo.Ticket()));
+             }
+         }
+      }
+   }
+
 
 //+------------------------------------------------------------------+
 //| Expert tick function (not used, using timer instead)               |
