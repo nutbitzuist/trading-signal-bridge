@@ -576,7 +576,7 @@ export default function DownloadPage() {
 }`}
                           </pre>
                           <p className="text-xs text-yellow-600 mt-2 font-medium">
-                            ⚠️ Important: Do NOT use math operations like &quot;{{ close }} * 1.02&quot; - they are invalid in JSON!
+                            ⚠️ Important: Do NOT use math operations like &quot;{`{{ close }} * 1.02`}&quot; - they are invalid in JSON!
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
                             Tip: Use your broker&apos;s exact symbol (e.g., XAUUSDm instead of XAUUSD if that&apos;s what MT4 shows)
