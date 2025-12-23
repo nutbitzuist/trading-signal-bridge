@@ -173,15 +173,26 @@ void PollSignals()
 //+------------------------------------------------------------------+
 void ProcessSignalsResponse(string response)
 {
+   //--- Debug: Log raw response length
+   Log("Received response length: " + IntegerToString(StringLen(response)));
+   
    //--- Extract signals array
    string signalsJson = ExtractJsonValue(response, "signals");
+   
+   //--- Debug: Log extracted signals
+   Log("Extracted signals JSON length: " + IntegerToString(StringLen(signalsJson)));
 
    if(StringLen(signalsJson) <= 2) // Empty array "[]"
+   {
+      Log("No pending signals");
       return;
+   }
 
    //--- Parse each signal
    string signals[];
    int count = ParseJsonArray(signalsJson, signals);
+   
+   Log("Parsed " + IntegerToString(count) + " signals from response");
 
    for(int i = 0; i < count; i++)
    {
