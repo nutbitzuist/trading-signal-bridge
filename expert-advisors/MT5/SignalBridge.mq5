@@ -27,14 +27,23 @@ input bool     UseRiskBasedSizing = false;                               // Enab
 input double   RiskPercent        = 1.0;                                 // Risk percent per trade
 input double   MaxDailyLossPercent= 3.0;                                 // Max daily loss percent (0 to disable)
 input bool     UseDailyDrawdown   = false;                               // Enable max daily drawdown protection
+input int      MaxOpenTrades      = 0;                                   // Max open trades (0 = unlimited)
+input double   MinEquityPercent   = 0;                                   // Min equity % to trade (0 = disabled)
 input string   Group_Filters      = "=== Filters ===";                   // Filter Settings
 input bool     UseTimeFilter      = false;                               // Enable time filter
 input int      StartHour          = 8;                                   // Start hour (Server time)
 input int      EndHour            = 20;                                  // End hour (Server time)
 input double   MaxSpreadPips      = 5.0;                                 // Maximum allowed spread in pips
+input bool     CloseBeforeWeekend = false;                               // Close all positions before weekend
+input int      FridayCloseHour    = 22;                                  // Friday close hour (Server time)
+input string   SymbolWhitelist    = "";                                  // Symbol whitelist (comma-separated, empty = all)
 input string   Group_Trailing     = "=== Trailing Stop ===";             // Trailing Stop Settings
 input int      TrailingStopPips   = 0;                                   // Trailing stop in pips (0 to disable)
 input int      TrailingStepPips   = 5;                                   // Trailing step in pips
+input string   Group_BreakEven    = "=== Break-Even ===";                // Break-Even Settings
+input bool     UseBreakEven       = false;                               // Enable break-even stop
+input int      BreakEvenPips      = 20;                                  // Pips in profit to activate break-even
+input int      BreakEvenLockPips  = 2;                                   // Pips to lock above entry
 
 //--- Global Variables
 string         gPendingEndpoint;
@@ -43,6 +52,7 @@ int            gLastError = 0;
 datetime       gLastPollTime = 0;
 int            gConnectionErrors = 0;
 const int      MAX_CONNECTION_ERRORS = 10;
+double         gStartingEquity = 0;
 
 //--- Trade objects
 CTrade         Trade;

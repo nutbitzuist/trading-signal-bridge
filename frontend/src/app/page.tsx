@@ -186,9 +186,15 @@ export default function LandingPage() {
               { icon: Webhook, title: 'TradingView Webhooks', desc: 'Direct integration with TradingView alerts via secure webhooks.' },
               { icon: Monitor, title: 'MT4 & MT5 Support', desc: 'Native Expert Advisors for both MetaTrader platforms.' },
               { icon: Zap, title: 'Sub-second Execution', desc: 'Signals execute in milliseconds, not minutes.' },
-              { icon: Shield, title: 'Risk Management', desc: 'Built-in position sizing based on % risk per trade.' },
+              { icon: Shield, title: 'Risk-Based Sizing', desc: 'Automatic lot calculation based on % risk per trade.' },
+              { icon: TrendingUp, title: 'Trailing Stop', desc: 'Automatic trailing stop to lock in profits as price moves.' },
+              { icon: Shield, title: 'Break-Even Protection', desc: 'Auto-move stop loss to entry after reaching profit target.' },
               { icon: Clock, title: 'Time & Spread Filters', desc: 'Only trade during optimal hours with tight spreads.' },
-              { icon: TrendingUp, title: 'Trailing Stop', desc: 'Automatic trailing stop to lock in profits.' },
+              { icon: Shield, title: 'Equity Protection', desc: 'Stop trading when equity drops below your threshold.' },
+              { icon: BarChart3, title: 'Max Trade Limits', desc: 'Limit maximum open positions to manage risk exposure.' },
+              { icon: Clock, title: 'Weekend Close', desc: 'Automatically close all positions before weekend gaps.' },
+              { icon: Shield, title: 'Daily Drawdown Limit', desc: 'Block new trades when daily loss limit is reached.' },
+              { icon: AlertTriangle, title: 'Symbol Whitelist', desc: 'Restrict trading to specific symbols you approve.' },
             ].map((feature, i) => (
               <div key={i} className="bg-white p-6 border-3 border-black shadow-[4px_4px_0_0_#000]">
                 <div className="w-12 h-12 bg-emerald-100 border-2 border-black flex items-center justify-center mb-4">

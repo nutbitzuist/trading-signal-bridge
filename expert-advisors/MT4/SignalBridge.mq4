@@ -24,14 +24,23 @@ input bool     UseRiskBasedSizing = false;                               // Enab
 input double   RiskPercent        = 1.0;                                 // Risk percent per trade
 input double   MaxDailyLossPercent= 3.0;                                 // Max daily loss percent (0 to disable)
 input bool     UseDailyDrawdown   = false;                               // Enable max daily drawdown protection
+input int      MaxOpenTrades      = 0;                                   // Max open trades (0 = unlimited)
+input double   MinEquityPercent   = 0;                                   // Min equity % to trade (0 = disabled)
 input string   Group_Filters      = "=== Filters ===";                   // Filter Settings
 input bool     UseTimeFilter      = false;                               // Enable time filter
 input int      StartHour          = 8;                                   // Start hour (Server time)
 input int      EndHour            = 20;                                  // End hour (Server time)
 input double   MaxSpreadPips      = 5.0;                                 // Maximum allowed spread in pips
+input bool     CloseBeforeWeekend = false;                               // Close all positions before weekend
+input int      FridayCloseHour    = 22;                                  // Friday close hour (Server time)
+input string   SymbolWhitelist    = "";                                  // Symbol whitelist (comma-separated, empty = all)
 input string   Group_Trailing     = "=== Trailing Stop ===";             // Trailing Stop Settings
 input int      TrailingStopPips   = 0;                                   // Trailing stop in pips (0 to disable)
 input int      TrailingStepPips   = 5;                                   // Trailing step in pips
+input string   Group_BreakEven    = "=== Break-Even ===";                // Break-Even Settings
+input bool     UseBreakEven       = false;                               // Enable break-even stop
+input int      BreakEvenPips      = 20;                                  // Pips in profit to activate break-even
+input int      BreakEvenLockPips  = 2;                                   // Pips to lock above entry
 
 //--- Global Variables
 string         gPendingEndpoint;
@@ -40,6 +49,7 @@ int            gLastError = 0;
 datetime       gLastPollTime = 0;
 int            gConnectionErrors = 0;
 const int      MAX_CONNECTION_ERRORS = 10;
+double         gStartingEquity = 0;
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                     |
@@ -70,12 +80,19 @@ int OnInit()
       return(INIT_FAILED);
    }
 
+   //--- Initialize starting equity for equity protection
+   gStartingEquity = AccountEquity();
+
    //--- Start timer
    EventSetTimer(PollIntervalSec);
 
    Log("SignalBridge initialized successfully");
    Log("Server: " + ServerURL);
    Log("Poll interval: " + IntegerToString(PollIntervalSec) + " seconds");
+   if(UseBreakEven) Log("Break-Even: ON (" + IntegerToString(BreakEvenPips) + " pips)");
+   if(TrailingStopPips > 0) Log("Trailing Stop: ON (" + IntegerToString(TrailingStopPips) + " pips)");
+   if(MaxOpenTrades > 0) Log("Max Open Trades: " + IntegerToString(MaxOpenTrades));
+   if(CloseBeforeWeekend) Log("Weekend Close: ON (Friday " + IntegerToString(FridayCloseHour) + ":00)");
 
    return(INIT_SUCCEEDED);
 }
@@ -109,8 +126,14 @@ void OnTimer()
       return;
    }
 
+   //--- Manage break-even stops
+   ManageBreakEven();
+
    //--- Pool for trailing stop
    ManageTrailingStop();
+
+   //--- Check weekend close
+   CheckWeekendClose();
 
    //--- Poll for signals
    PollSignals();
@@ -837,21 +860,70 @@ bool CheckFilters(string symbol)
       }
    }
 
-   // 2. Spread Filter
-   double spread = MarketInfo(symbol, MODE_SPREAD); // Returns in points
+   // 2. Weekend Close Filter
+   if(CloseBeforeWeekend)
+   {
+      if(DayOfWeek() == 5 && Hour() >= FridayCloseHour)
+      {
+         Log("Filter: Friday close time reached. Blocking new trades.");
+         return false;
+      }
+   }
+
+   // 3. Max Open Trades Filter
+   if(MaxOpenTrades > 0)
+   {
+      int openCount = 0;
+      for(int i = 0; i < OrdersTotal(); i++)
+      {
+         if(OrderSelect(i, SELECT_BY_POS, MODE_TRADES))
+         {
+            if(OrderMagicNumber() == MagicNumber && OrderType() <= OP_SELL)
+               openCount++;
+         }
+      }
+      if(openCount >= MaxOpenTrades)
+      {
+         Log("Filter: Max open trades limit reached (" + IntegerToString(openCount) + "/" + IntegerToString(MaxOpenTrades) + ")");
+         return false;
+      }
+   }
+
+   // 4. Min Equity Filter
+   if(MinEquityPercent > 0)
+   {
+      if(gStartingEquity > 0)
+      {
+         double currentEquity = AccountEquity();
+         double equityPercent = (currentEquity / gStartingEquity) * 100;
+         if(equityPercent < MinEquityPercent)
+         {
+            Log("Filter: Equity below minimum (" + DoubleToString(equityPercent, 1) + "% < " + DoubleToString(MinEquityPercent, 1) + "%)");
+            return false;
+         }
+      }
+   }
+
+   // 5. Symbol Whitelist Filter
+   if(StringLen(SymbolWhitelist) > 0)
+   {
+      string whitelistLower = SymbolWhitelist;
+      StringToLower(whitelistLower);
+      string symbolLower = symbol;
+      StringToLower(symbolLower);
+      
+      if(StringFind(whitelistLower, symbolLower) < 0)
+      {
+         Log("Filter: Symbol " + symbol + " not in whitelist");
+         return false;
+      }
+   }
+
+   // 6. Spread Filter
+   double spread = MarketInfo(symbol, MODE_SPREAD);
    double point = MarketInfo(symbol, MODE_POINT);
-   double spreadPips = spread * point; // Actually MODE_SPREAD returns points (e.g., 20 for 2 pips on 5-digit).
-   
-   // Adjust for 5-digit brokers (1 pip = 10 points)
-   // Usually we want inputs in Pips.
-   // Let's assume standard pip definition: 0.0001 for non-JPY, 0.01 for JPY.
-   // MarketInfo(MODE_SPREAD) is in points. 
-   
-   // If input MaxSpreadPips is 5.0, and we have 5-digit broker, that's 50 points.
-   // Point check:
    int digits = (int)MarketInfo(symbol, MODE_DIGITS);
    double pipSize = (digits == 3 || digits == 5) ? 10 * point : point;
-   
    double currentSpreadPips = spread * point / pipSize;
    
    if(currentSpreadPips > MaxSpreadPips)
@@ -860,11 +932,11 @@ bool CheckFilters(string symbol)
       return false;
    }
 
-   // 3. Max Daily Drawdown
+   // 7. Max Daily Drawdown
    if(UseDailyDrawdown)
    {
       double dailyProfit = GetDailyProfit();
-      double startBalance = AccountBalance() - dailyProfit; // Approx start balance
+      double startBalance = AccountBalance() - dailyProfit;
       double maxLoss = startBalance * (MaxDailyLossPercent / 100.0);
       
       if(dailyProfit < -maxLoss)
@@ -957,6 +1029,83 @@ void ManageTrailingStop()
       }
    }
 
+
+//+------------------------------------------------------------------+
+//| Manage Break-Even Stops                                            |
+//+------------------------------------------------------------------+
+void ManageBreakEven()
+{
+   if(!UseBreakEven) return;
+
+   for(int i = 0; i < OrdersTotal(); i++)
+   {
+      if(!OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) continue;
+      if(OrderMagicNumber() != MagicNumber) continue;
+      if(OrderType() > OP_SELL) continue;
+
+      string symbol = OrderSymbol();
+      double point = MarketInfo(symbol, MODE_POINT);
+      int digits = (int)MarketInfo(symbol, MODE_DIGITS);
+      double pipSize = (digits == 3 || digits == 5) ? 10 * point : point;
+      
+      double breakEvenDist = BreakEvenPips * pipSize;
+      double lockDist = BreakEvenLockPips * pipSize;
+
+      if(OrderType() == OP_BUY)
+      {
+         double profit = Bid - OrderOpenPrice();
+         if(profit >= breakEvenDist && OrderStopLoss() < OrderOpenPrice())
+         {
+            double newSL = NormalizeDouble(OrderOpenPrice() + lockDist, digits);
+            if(OrderModify(OrderTicket(), OrderOpenPrice(), newSL, OrderTakeProfit(), 0, clrGreen))
+               Log("Break-Even set for Buy Ticket " + IntegerToString(OrderTicket()));
+         }
+      }
+      else if(OrderType() == OP_SELL)
+      {
+         double profit = OrderOpenPrice() - Ask;
+         if(profit >= breakEvenDist && (OrderStopLoss() > OrderOpenPrice() || OrderStopLoss() == 0))
+         {
+            double newSL = NormalizeDouble(OrderOpenPrice() - lockDist, digits);
+            if(OrderModify(OrderTicket(), OrderOpenPrice(), newSL, OrderTakeProfit(), 0, clrGreen))
+               Log("Break-Even set for Sell Ticket " + IntegerToString(OrderTicket()));
+         }
+      }
+   }
+}
+
+//+------------------------------------------------------------------+
+//| Check and close positions before weekend                           |
+//+------------------------------------------------------------------+
+void CheckWeekendClose()
+{
+   if(!CloseBeforeWeekend) return;
+   
+   if(DayOfWeek() == 5 && Hour() >= FridayCloseHour)
+   {
+      int closedCount = 0;
+      for(int i = OrdersTotal() - 1; i >= 0; i--)
+      {
+         if(!OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) continue;
+         if(OrderMagicNumber() != MagicNumber) continue;
+         if(OrderType() > OP_SELL) continue;
+         
+         bool result = false;
+         if(OrderType() == OP_BUY)
+            result = OrderClose(OrderTicket(), OrderLots(), Bid, Slippage, clrRed);
+         else if(OrderType() == OP_SELL)
+            result = OrderClose(OrderTicket(), OrderLots(), Ask, Slippage, clrRed);
+         
+         if(result)
+         {
+            Log("Weekend Close: Closed Ticket " + IntegerToString(OrderTicket()));
+            closedCount++;
+         }
+      }
+      if(closedCount > 0)
+         Log("Weekend Close: Total " + IntegerToString(closedCount) + " positions closed");
+   }
+}
 
 //+------------------------------------------------------------------+
 //| Expert tick function (not used, using timer instead)               |
