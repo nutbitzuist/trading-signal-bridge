@@ -22,6 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { Sidebar } from '@/components/layout/Sidebar';
 
 interface UseCase {
     id: string;
@@ -367,86 +368,117 @@ if longSignal
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="max-w-5xl mx-auto px-4 py-8">
-                {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900">TradingView Use Cases</h1>
-                    <p className="mt-2 text-gray-600">
-                        Step-by-step examples for connecting TradingView strategies to MT4/MT5
-                    </p>
-                </div>
+        <div className="flex h-screen bg-gray-100">
+            <Sidebar />
+            <main className="flex-1 overflow-auto p-8">
+                <div className="max-w-5xl mx-auto">
+                    {/* Header */}
+                    <div className="mb-8">
+                        <h1 className="text-3xl font-bold text-gray-900">TradingView Use Cases</h1>
+                        <p className="mt-2 text-gray-600">
+                            Step-by-step examples for connecting TradingView strategies to MT4/MT5
+                        </p>
+                    </div>
 
-                {/* Important Note */}
-                <Card className="mb-8 border-yellow-200 bg-yellow-50">
-                    <CardContent className="pt-6">
-                        <div className="flex items-start gap-3">
-                            <AlertTriangle className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
-                            <div>
-                                <p className="font-medium text-yellow-800">Important JSON Rules</p>
-                                <ul className="mt-2 text-sm text-yellow-700 space-y-1">
-                                    <li>• <strong>No math operations</strong> in JSON (e.g., <code className="bg-yellow-100 px-1 rounded">{'{{close}} * 1.02'}</code> is invalid)</li>
-                                    <li>• Use <strong>str.tostring()</strong> in Pine Script to convert numbers</li>
-                                    <li>• TP/SL must be <strong>absolute price values</strong>, not offsets</li>
-                                    <li>• Use your broker&apos;s exact symbol (e.g., <code className="bg-yellow-100 px-1 rounded">XAUUSDm</code> not <code className="bg-yellow-100 px-1 rounded">XAUUSD</code>)</li>
-                                </ul>
+                    {/* Important Note */}
+                    <Card className="mb-8 border-yellow-200 bg-yellow-50">
+                        <CardContent className="pt-6">
+                            <div className="flex items-start gap-3">
+                                <AlertTriangle className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="font-medium text-yellow-800">Important JSON Rules</p>
+                                    <ul className="mt-2 text-sm text-yellow-700 space-y-1">
+                                        <li>• <strong>No math operations</strong> in JSON (e.g., <code className="bg-yellow-100 px-1 rounded">{'{{close}} * 1.02'}</code> is invalid)</li>
+                                        <li>• Use <strong>str.tostring()</strong> in Pine Script to convert numbers</li>
+                                        <li>• TP/SL must be <strong>absolute price values</strong>, not offsets</li>
+                                        <li>• Use your broker&apos;s exact symbol (e.g., <code className="bg-yellow-100 px-1 rounded">XAUUSDm</code> not <code className="bg-yellow-100 px-1 rounded">XAUUSD</code>)</li>
+                                    </ul>
+                                </div>
                             </div>
-                        </div>
-                    </CardContent>
-                </Card>
+                        </CardContent>
+                    </Card>
 
-                {/* Use Cases */}
-                <div className="space-y-4">
-                    {useCases.map((useCase) => (
-                        <Card key={useCase.id} className="overflow-hidden">
-                            <button
-                                onClick={() => setExpandedCase(expandedCase === useCase.id ? null : useCase.id)}
-                                className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
-                                        {useCase.icon}
+                    {/* Use Cases */}
+                    <div className="space-y-4">
+                        {useCases.map((useCase) => (
+                            <Card key={useCase.id} className="overflow-hidden">
+                                <button
+                                    onClick={() => setExpandedCase(expandedCase === useCase.id ? null : useCase.id)}
+                                    className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+                                            {useCase.icon}
+                                        </div>
+                                        <div className="text-left">
+                                            <h3 className="font-semibold text-gray-900">{useCase.title}</h3>
+                                            <p className="text-sm text-gray-500">{useCase.description}</p>
+                                        </div>
                                     </div>
-                                    <div className="text-left">
-                                        <h3 className="font-semibold text-gray-900">{useCase.title}</h3>
-                                        <p className="text-sm text-gray-500">{useCase.description}</p>
+                                    <div className="flex items-center gap-3">
+                                        <Badge className={getDifficultyColor(useCase.difficulty)}>
+                                            {useCase.difficulty}
+                                        </Badge>
+                                        {expandedCase === useCase.id ? (
+                                            <ChevronUp className="h-5 w-5 text-gray-400" />
+                                        ) : (
+                                            <ChevronDown className="h-5 w-5 text-gray-400" />
+                                        )}
                                     </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <Badge className={getDifficultyColor(useCase.difficulty)}>
-                                        {useCase.difficulty}
-                                    </Badge>
-                                    {expandedCase === useCase.id ? (
-                                        <ChevronUp className="h-5 w-5 text-gray-400" />
-                                    ) : (
-                                        <ChevronDown className="h-5 w-5 text-gray-400" />
-                                    )}
-                                </div>
-                            </button>
+                                </button>
 
-                            {expandedCase === useCase.id && (
-                                <CardContent className="border-t bg-gray-50 space-y-4">
-                                    {/* Features */}
-                                    <div className="flex flex-wrap gap-2">
-                                        {useCase.features.map((feature, idx) => (
-                                            <Badge key={idx} variant="outline" className="bg-white">
-                                                {feature}
-                                            </Badge>
-                                        ))}
-                                    </div>
+                                {expandedCase === useCase.id && (
+                                    <CardContent className="border-t bg-gray-50 space-y-4">
+                                        {/* Features */}
+                                        <div className="flex flex-wrap gap-2">
+                                            {useCase.features.map((feature, idx) => (
+                                                <Badge key={idx} variant="outline" className="bg-white">
+                                                    {feature}
+                                                </Badge>
+                                            ))}
+                                        </div>
 
-                                    {/* Pine Script (if available) */}
-                                    {useCase.pineScript && (
+                                        {/* Pine Script (if available) */}
+                                        {useCase.pineScript && (
+                                            <div>
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <h4 className="font-medium text-gray-700">Pine Script</h4>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() => copyToClipboard(useCase.pineScript!, `pine-${useCase.id}`)}
+                                                        className="h-8"
+                                                    >
+                                                        {copied === `pine-${useCase.id}` ? (
+                                                            <>
+                                                                <CheckCircle className="h-4 w-4 mr-1 text-green-600" />
+                                                                Copied!
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Copy className="h-4 w-4 mr-1" />
+                                                                Copy Script
+                                                            </>
+                                                        )}
+                                                    </Button>
+                                                </div>
+                                                <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg text-xs overflow-x-auto max-h-64">
+                                                    {useCase.pineScript}
+                                                </pre>
+                                            </div>
+                                        )}
+
+                                        {/* JSON Template */}
                                         <div>
                                             <div className="flex items-center justify-between mb-2">
-                                                <h4 className="font-medium text-gray-700">Pine Script</h4>
+                                                <h4 className="font-medium text-gray-700">Webhook JSON</h4>
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
-                                                    onClick={() => copyToClipboard(useCase.pineScript!, `pine-${useCase.id}`)}
+                                                    onClick={() => copyToClipboard(useCase.jsonTemplate, `json-${useCase.id}`)}
                                                     className="h-8"
                                                 >
-                                                    {copied === `pine-${useCase.id}` ? (
+                                                    {copied === `json-${useCase.id}` ? (
                                                         <>
                                                             <CheckCircle className="h-4 w-4 mr-1 text-green-600" />
                                                             Copied!
@@ -454,91 +486,63 @@ if longSignal
                                                     ) : (
                                                         <>
                                                             <Copy className="h-4 w-4 mr-1" />
-                                                            Copy Script
+                                                            Copy JSON
                                                         </>
                                                     )}
                                                 </Button>
                                             </div>
-                                            <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg text-xs overflow-x-auto max-h-64">
-                                                {useCase.pineScript}
+                                            <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg text-xs overflow-x-auto">
+                                                {useCase.jsonTemplate}
                                             </pre>
                                         </div>
-                                    )}
 
-                                    {/* JSON Template */}
-                                    <div>
-                                        <div className="flex items-center justify-between mb-2">
-                                            <h4 className="font-medium text-gray-700">Webhook JSON</h4>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => copyToClipboard(useCase.jsonTemplate, `json-${useCase.id}`)}
-                                                className="h-8"
-                                            >
-                                                {copied === `json-${useCase.id}` ? (
-                                                    <>
-                                                        <CheckCircle className="h-4 w-4 mr-1 text-green-600" />
-                                                        Copied!
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Copy className="h-4 w-4 mr-1" />
-                                                        Copy JSON
-                                                    </>
-                                                )}
-                                            </Button>
-                                        </div>
-                                        <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg text-xs overflow-x-auto">
-                                            {useCase.jsonTemplate}
-                                        </pre>
-                                    </div>
+                                        {/* Notes */}
+                                        {useCase.notes && (
+                                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                                <p className="text-sm text-blue-800">
+                                                    <strong>💡 Tip:</strong> {useCase.notes}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                )}
+                            </Card>
+                        ))}
+                    </div>
 
-                                    {/* Notes */}
-                                    {useCase.notes && (
-                                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                                            <p className="text-sm text-blue-800">
-                                                <strong>💡 Tip:</strong> {useCase.notes}
-                                            </p>
-                                        </div>
+                    {/* Webhook URL Reference */}
+                    <Card className="mt-8">
+                        <CardHeader>
+                            <CardTitle className="text-lg">Your Webhook URL</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="bg-gray-100 p-3 rounded-lg flex items-center justify-between">
+                                <code className="text-sm break-all">
+                                    https://backend-production-d908.up.railway.app/api/v1/webhook/tradingview
+                                </code>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => copyToClipboard(
+                                        'https://backend-production-d908.up.railway.app/api/v1/webhook/tradingview',
+                                        'webhook-url'
                                     )}
-                                </CardContent>
-                            )}
-                        </Card>
-                    ))}
+                                    className="ml-2 shrink-0"
+                                >
+                                    {copied === 'webhook-url' ? (
+                                        <CheckCircle className="h-4 w-4 text-green-600" />
+                                    ) : (
+                                        <Copy className="h-4 w-4" />
+                                    )}
+                                </Button>
+                            </div>
+                            <p className="text-sm text-gray-500 mt-2">
+                                Paste this URL in TradingView&apos;s alert Notifications tab → Webhook URL
+                            </p>
+                        </CardContent>
+                    </Card>
                 </div>
-
-                {/* Webhook URL Reference */}
-                <Card className="mt-8">
-                    <CardHeader>
-                        <CardTitle className="text-lg">Your Webhook URL</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="bg-gray-100 p-3 rounded-lg flex items-center justify-between">
-                            <code className="text-sm break-all">
-                                https://backend-production-d908.up.railway.app/api/v1/webhook/tradingview
-                            </code>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => copyToClipboard(
-                                    'https://backend-production-d908.up.railway.app/api/v1/webhook/tradingview',
-                                    'webhook-url'
-                                )}
-                                className="ml-2 shrink-0"
-                            >
-                                {copied === 'webhook-url' ? (
-                                    <CheckCircle className="h-4 w-4 text-green-600" />
-                                ) : (
-                                    <Copy className="h-4 w-4" />
-                                )}
-                            </Button>
-                        </div>
-                        <p className="text-sm text-gray-500 mt-2">
-                            Paste this URL in TradingView&apos;s alert Notifications tab → Webhook URL
-                        </p>
-                    </CardContent>
-                </Card>
-            </div>
+            </main>
         </div>
     );
 }
