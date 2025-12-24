@@ -92,8 +92,8 @@ export default function DownloadPage() {
                   Download the Signal Bridge EA for MT4. Compatible with all MT4 brokers.
                 </p>
                 <a
-                  href="/downloads/SignalBridge_MT4.mq4"
-                  download="SignalBridge.mq4"
+                  href="/downloads/SignalBridge.ex4"
+                  download="SignalBridge.ex4"
                   className="inline-flex items-center justify-center w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                 >
                   <Download className="h-4 w-4 mr-2" />
@@ -118,8 +118,8 @@ export default function DownloadPage() {
                   Download the Signal Bridge EA for MT5. Full support for MT5 features.
                 </p>
                 <a
-                  href="/downloads/SignalBridge_MT5.mq5"
-                  download="SignalBridge.mq5"
+                  href="/downloads/SignalBridge.ex5"
+                  download="SignalBridge.ex5"
                   className="inline-flex items-center justify-center w-full px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
                 >
                   <Download className="h-4 w-4 mr-2" />
@@ -231,7 +231,7 @@ export default function DownloadPage() {
                         <div>
                           <p className="font-medium">Download the EA file</p>
                           <p className="text-sm text-gray-600">
-                            Click the "Download for MT4" button above to download SignalBridge.mq4
+                            Click the "Download for MT4" button above to download SignalBridge.ex4
                           </p>
                         </div>
                       </div>
@@ -262,9 +262,9 @@ export default function DownloadPage() {
                           4
                         </div>
                         <div>
-                          <p className="font-medium">Compile the EA (Optional)</p>
+                          <p className="font-medium">Ready to Use</p>
                           <p className="text-sm text-gray-600">
-                            Open MetaEditor (F4), open the file, and press F7 to compile. This creates the .ex4 file.
+                            The .ex4 file is pre-compiled and ready to use. No compilation needed.
                           </p>
                         </div>
                       </div>
@@ -336,7 +336,7 @@ export default function DownloadPage() {
                         <div>
                           <p className="font-medium">Download the EA file</p>
                           <p className="text-sm text-gray-600">
-                            Click the "Download for MT5" button above to download SignalBridge.mq5
+                            Click the "Download for MT5" button above to download SignalBridge.ex5
                           </p>
                         </div>
                       </div>
@@ -367,9 +367,9 @@ export default function DownloadPage() {
                           4
                         </div>
                         <div>
-                          <p className="font-medium">Compile the EA</p>
+                          <p className="font-medium">Ready to Use</p>
                           <p className="text-sm text-gray-600">
-                            Open MetaEditor (F4), open the file, and press F7 to compile. This creates the .ex5 file.
+                            The .ex5 file is pre-compiled and ready to use. No compilation needed.
                           </p>
                         </div>
                       </div>
