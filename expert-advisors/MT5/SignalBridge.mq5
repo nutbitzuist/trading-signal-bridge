@@ -747,6 +747,8 @@ string ExtractJsonValue(string json, string key)
    int valueEnd = valueStart;
    int braceCount = 0;
    int bracketCount = 0;
+   bool isArray = (firstChar == '[');
+   bool isObject = (firstChar == '{');
 
    while(valueEnd < StringLen(json))
    {
@@ -757,7 +759,20 @@ string ExtractJsonValue(string json, string key)
       else if(c == '[') bracketCount++;
       else if(c == ']') bracketCount--;
 
-      if(braceCount == 0 && bracketCount == 0 && (c == ',' || c == '}' || c == ']'))
+      // For arrays and objects, include the closing bracket/brace
+      if(isArray && bracketCount == 0 && c == ']')
+      {
+         valueEnd++;
+         break;
+      }
+      if(isObject && braceCount == 0 && c == '}')
+      {
+         valueEnd++;
+         break;
+      }
+      
+      // For simple values (numbers, booleans), stop at delimiter
+      if(!isArray && !isObject && braceCount == 0 && bracketCount == 0 && (c == ',' || c == '}' || c == ']'))
          break;
 
       valueEnd++;
