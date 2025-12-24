@@ -164,7 +164,7 @@ class SignalProcessor:
 
         if signal and signal.status == "pending":
             signal.status = "sent"
-            signal.sent_at = datetime.utcnow()
+            signal.sent_at = datetime.now(timezone.utc)
             await self.db.flush()
 
         return signal
