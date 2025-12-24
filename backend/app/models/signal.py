@@ -2,7 +2,7 @@
 Signal model for trading signals.
 """
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
@@ -117,7 +117,7 @@ class Signal(Base):
     )
     expires_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.utcnow() + timedelta(seconds=60),
+        default=lambda: datetime.now(timezone.utc) + timedelta(seconds=60),
         nullable=False,
     )
 
@@ -144,4 +144,6 @@ class Signal(Base):
     @property
     def is_expired(self) -> bool:
         """Check if the signal has expired."""
-        return datetime.utcnow() > self.expires_at.replace(tzinfo=None)
+        now = datetime.now(timezone.utc)
+        expires = self.expires_at if self.expires_at.tzinfo else self.expires_at.replace(tzinfo=timezone.utc)
+        return now > expires

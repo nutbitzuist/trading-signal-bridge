@@ -1,7 +1,7 @@
 """
 Signal processing service for handling trading signals.
 """
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import List, Optional
 from uuid import UUID
@@ -89,7 +89,7 @@ class SignalProcessor:
             status="pending",
             source="tradingview",
             raw_payload=payload.model_dump(mode="json"),
-            expires_at=datetime.utcnow() + timedelta(seconds=settings.SIGNAL_EXPIRY_SECONDS),
+            expires_at=datetime.now(timezone.utc) + timedelta(seconds=settings.SIGNAL_EXPIRY_SECONDS),
         )
 
         self.db.add(signal)
@@ -141,7 +141,7 @@ class SignalProcessor:
 
     async def get_pending_signals(self, account_id: UUID) -> List[Signal]:
         """Get pending signals for an account that haven't expired."""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         result = await self.db.execute(
             select(Signal).where(
@@ -217,7 +217,7 @@ class SignalProcessor:
 
     async def expire_old_signals(self) -> int:
         """Expire signals that have passed their expiry time."""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         result = await self.db.execute(
             update(Signal)
