@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import {
   Zap,
@@ -14,7 +15,184 @@ import {
   TrendingUp,
   Settings,
   AlertTriangle,
+  Star,
 } from 'lucide-react';
+
+const pricingPlans = [
+  {
+    name: 'Starter',
+    description: 'Perfect for beginners testing automation',
+    monthlyPrice: 19,
+    yearlyPrice: 190, // 2 months free
+    features: [
+      '1 MT4/MT5 Account',
+      '100 Signals/month',
+      'Basic risk management',
+      'Email support',
+      '7-day history',
+    ],
+    notIncluded: [
+      'Trailing stop',
+      'Break-even protection',
+      'Priority support',
+    ],
+    highlighted: false,
+  },
+  {
+    name: 'Pro',
+    description: 'Most popular for active traders',
+    monthlyPrice: 49,
+    yearlyPrice: 490, // 2 months free
+    features: [
+      '5 MT4/MT5 Accounts',
+      'Unlimited Signals',
+      'Advanced risk management',
+      'Trailing stop & break-even',
+      'Time & spread filters',
+      '30-day history',
+      'Priority email support',
+    ],
+    notIncluded: [
+      'Dedicated account manager',
+    ],
+    highlighted: true,
+    badge: 'Most Popular',
+  },
+  {
+    name: 'Enterprise',
+    description: 'For professional trading operations',
+    monthlyPrice: 149,
+    yearlyPrice: 1490, // 2 months free
+    features: [
+      'Unlimited MT4/MT5 Accounts',
+      'Unlimited Signals',
+      'All Pro features',
+      'Custom signal routing',
+      'API access',
+      '90-day history',
+      'Dedicated account manager',
+      'Phone support',
+    ],
+    notIncluded: [],
+    highlighted: false,
+  },
+];
+
+function PricingSection() {
+  const [isYearly, setIsYearly] = useState(false);
+
+  return (
+    <section className="py-20 px-4 bg-gray-100 border-b-3 border-black">
+      <div className="max-w-6xl mx-auto">
+        <h2 className="text-4xl font-black text-center mb-4">
+          Simple, Transparent Pricing
+        </h2>
+        <p className="text-center text-gray-600 mb-8 text-lg">
+          Choose the plan that fits your trading needs
+        </p>
+
+        {/* Billing Toggle */}
+        <div className="flex justify-center items-center gap-4 mb-12">
+          <span className={`font-bold ${!isYearly ? 'text-black' : 'text-gray-400'}`}>Monthly</span>
+          <button
+            onClick={() => setIsYearly(!isYearly)}
+            className="relative w-16 h-8 bg-black border-2 border-black transition-colors"
+          >
+            <div
+              className={`absolute top-1 w-5 h-5 bg-emerald-500 transition-all ${isYearly ? 'left-9' : 'left-1'
+                }`}
+            />
+          </button>
+          <span className={`font-bold ${isYearly ? 'text-black' : 'text-gray-400'}`}>
+            Yearly
+            <span className="ml-2 text-emerald-600 text-sm font-bold">Save 2 months!</span>
+          </span>
+        </div>
+
+        {/* Pricing Cards */}
+        <div className="grid md:grid-cols-3 gap-6 items-start">
+          {pricingPlans.map((plan, index) => (
+            <div
+              key={plan.name}
+              className={`relative bg-white border-3 border-black ${plan.highlighted
+                  ? 'shadow-[8px_8px_0_0_#000] md:-mt-4 md:mb-4 md:scale-105 z-10'
+                  : 'shadow-[4px_4px_0_0_#000]'
+                }`}
+            >
+              {/* Popular Badge */}
+              {plan.badge && (
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                  <div className="bg-emerald-500 text-white font-bold text-sm px-4 py-1 border-2 border-black flex items-center gap-1">
+                    <Star className="w-4 h-4" />
+                    {plan.badge}
+                  </div>
+                </div>
+              )}
+
+              <div className={`p-6 ${plan.highlighted ? 'pt-8' : ''}`}>
+                <h3 className="text-2xl font-black mb-2">{plan.name}</h3>
+                <p className="text-gray-600 mb-4 text-sm">{plan.description}</p>
+
+                {/* Price */}
+                <div className="mb-6">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-black">
+                      ${isYearly ? Math.round(plan.yearlyPrice / 12) : plan.monthlyPrice}
+                    </span>
+                    <span className="text-gray-500">/month</span>
+                  </div>
+                  {isYearly && (
+                    <p className="text-sm text-emerald-600 font-bold mt-1">
+                      ${plan.yearlyPrice}/year (save ${plan.monthlyPrice * 12 - plan.yearlyPrice})
+                    </p>
+                  )}
+                </div>
+
+                {/* CTA Button */}
+                <Link
+                  href="/auth/register"
+                  className={`block text-center font-bold py-3 px-4 border-2 border-black transition-all ${plan.highlighted
+                      ? 'bg-emerald-500 text-white shadow-[4px_4px_0_0_#000] hover:shadow-[2px_2px_0_0_#000] hover:translate-x-[2px] hover:translate-y-[2px]'
+                      : 'bg-white hover:bg-gray-50 shadow-[4px_4px_0_0_#000] hover:shadow-[2px_2px_0_0_#000] hover:translate-x-[2px] hover:translate-y-[2px]'
+                    }`}
+                >
+                  {plan.highlighted ? 'Start Free Trial' : 'Get Started'}
+                </Link>
+
+                {/* Features */}
+                <div className="mt-6 space-y-3">
+                  {plan.features.map((feature) => (
+                    <div key={feature} className="flex items-center gap-2">
+                      <div className="w-5 h-5 bg-emerald-100 border border-black flex items-center justify-center flex-shrink-0">
+                        <Check className="w-3 h-3 text-emerald-600" />
+                      </div>
+                      <span className="text-sm font-medium">{feature}</span>
+                    </div>
+                  ))}
+                  {plan.notIncluded.map((feature) => (
+                    <div key={feature} className="flex items-center gap-2 opacity-50">
+                      <div className="w-5 h-5 bg-gray-100 border border-gray-300 flex items-center justify-center flex-shrink-0">
+                        <X className="w-3 h-3 text-gray-400" />
+                      </div>
+                      <span className="text-sm">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Money-back guarantee */}
+        <p className="text-center text-gray-500 mt-8 text-sm">
+          <Shield className="w-4 h-4 inline mr-1" />
+          14-day money-back guarantee • No questions asked
+        </p>
+      </div>
+    </section>
+  );
+}
+
 
 export default function LandingPage() {
   return (
@@ -264,6 +442,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Pricing Section */}
+      <PricingSection />
 
       {/* Final CTA */}
       <section className="py-20 px-4 bg-emerald-500 border-b-3 border-black">

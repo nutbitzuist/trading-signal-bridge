@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Signal } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -53,26 +53,28 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <Signal className="h-12 w-12 text-blue-600" />
+            <div className="w-16 h-16 bg-emerald-500 border-3 border-black flex items-center justify-center shadow-[4px_4px_0_0_#000]">
+              <TrendingUp className="h-8 w-8 text-white" />
+            </div>
           </div>
           <CardTitle className="text-2xl">Create an account</CardTitle>
-          <CardDescription>
+          <CardDescription className="font-medium">
             Sign up to start receiving trading signals
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <CardContent className="space-y-4">
             {error && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
+              <div className="bg-red-50 text-red-600 p-3 border-2 border-red-500 text-sm font-medium">
                 {error}
               </div>
             )}
             <div className="space-y-2">
-              <label htmlFor="full_name" className="text-sm font-medium">
+              <label htmlFor="full_name" className="text-sm font-bold">
                 Full Name (optional)
               </label>
               <Input
@@ -83,7 +85,7 @@ export default function RegisterPage() {
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
+              <label htmlFor="email" className="text-sm font-bold">
                 Email
               </label>
               <Input
@@ -93,11 +95,11 @@ export default function RegisterPage() {
                 {...register('email')}
               />
               {errors.email && (
-                <p className="text-sm text-red-600">{errors.email.message}</p>
+                <p className="text-sm text-red-600 font-medium">{errors.email.message}</p>
               )}
             </div>
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
+              <label htmlFor="password" className="text-sm font-bold">
                 Password
               </label>
               <Input
@@ -107,11 +109,11 @@ export default function RegisterPage() {
                 {...register('password')}
               />
               {errors.password && (
-                <p className="text-sm text-red-600">{errors.password.message}</p>
+                <p className="text-sm text-red-600 font-medium">{errors.password.message}</p>
               )}
             </div>
             <div className="space-y-2">
-              <label htmlFor="confirm_password" className="text-sm font-medium">
+              <label htmlFor="confirm_password" className="text-sm font-bold">
                 Confirm Password
               </label>
               <Input
@@ -121,7 +123,7 @@ export default function RegisterPage() {
                 {...register('confirm_password')}
               />
               {errors.confirm_password && (
-                <p className="text-sm text-red-600">{errors.confirm_password.message}</p>
+                <p className="text-sm text-red-600 font-medium">{errors.confirm_password.message}</p>
               )}
             </div>
           </CardContent>
@@ -129,9 +131,9 @@ export default function RegisterPage() {
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? 'Creating account...' : 'Create account'}
             </Button>
-            <p className="text-sm text-center text-gray-600">
+            <p className="text-sm text-center text-gray-600 font-medium">
               Already have an account?{' '}
-              <Link href="/auth/login" className="text-blue-600 hover:underline">
+              <Link href="/auth/login" className="text-emerald-600 hover:underline font-bold">
                 Sign in
               </Link>
             </p>

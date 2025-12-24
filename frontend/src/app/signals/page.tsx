@@ -85,13 +85,13 @@ export default function SignalsPage() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-50">
       <Sidebar />
       <main className="flex-1 overflow-auto p-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Signals</h1>
-            <div className="flex gap-2">
+            <h1 className="text-4xl font-black text-black">Signals</h1>
+            <div className="flex gap-3">
               <Button variant="outline" onClick={() => refetch()}>
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
@@ -113,13 +113,13 @@ export default function SignalsPage() {
               <CardContent className="pt-6">
                 <div className="grid grid-cols-4 gap-4">
                   <div>
-                    <label className="text-sm font-medium">Account</label>
+                    <label className="text-sm font-bold mb-2 block">Account</label>
                     <select
                       value={filters.account_id}
                       onChange={(e) =>
                         setFilters({ ...filters, account_id: e.target.value, page: 1 })
                       }
-                      className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                      className="w-full h-10 px-3 border-2 border-black bg-white font-medium"
                     >
                       <option value="">All Accounts</option>
                       {accountsData?.accounts?.map((account: any) => (
@@ -130,13 +130,13 @@ export default function SignalsPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Status</label>
+                    <label className="text-sm font-bold mb-2 block">Status</label>
                     <select
                       value={filters.status}
                       onChange={(e) =>
                         setFilters({ ...filters, status: e.target.value, page: 1 })
                       }
-                      className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                      className="w-full h-10 px-3 border-2 border-black bg-white font-medium"
                     >
                       <option value="">All Statuses</option>
                       <option value="pending">Pending</option>
@@ -148,7 +148,7 @@ export default function SignalsPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Symbol</label>
+                    <label className="text-sm font-bold mb-2 block">Symbol</label>
                     <Input
                       value={filters.symbol}
                       onChange={(e) =>
@@ -159,7 +159,7 @@ export default function SignalsPage() {
                   </div>
                   <div className="flex items-end">
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       onClick={() =>
                         setFilters({
                           account_id: '',
@@ -183,54 +183,50 @@ export default function SignalsPage() {
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr className="text-left text-sm text-gray-500">
-                      <th className="px-6 py-3 font-medium">Symbol</th>
-                      <th className="px-6 py-3 font-medium">Action</th>
-                      <th className="px-6 py-3 font-medium">Type</th>
-                      <th className="px-6 py-3 font-medium">Quantity</th>
-                      <th className="px-6 py-3 font-medium">TP / SL</th>
-                      <th className="px-6 py-3 font-medium">Status</th>
-                      <th className="px-6 py-3 font-medium">Created</th>
-                      <th className="px-6 py-3 font-medium">Actions</th>
+                  <thead className="bg-gray-100 border-b-3 border-black">
+                    <tr className="text-left text-sm">
+                      <th className="px-6 py-4 font-bold">Symbol</th>
+                      <th className="px-6 py-4 font-bold">Action</th>
+                      <th className="px-6 py-4 font-bold">Type</th>
+                      <th className="px-6 py-4 font-bold">Quantity</th>
+                      <th className="px-6 py-4 font-bold">TP / SL</th>
+                      <th className="px-6 py-4 font-bold">Status</th>
+                      <th className="px-6 py-4 font-bold">Created</th>
+                      <th className="px-6 py-4 font-bold">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y">
+                  <tbody className="divide-y-2 divide-black">
                     {isLoading ? (
                       <tr>
-                        <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                        <td colSpan={8} className="px-6 py-8 text-center text-gray-500 font-medium">
                           Loading signals...
                         </td>
                       </tr>
                     ) : signalsData?.signals?.length > 0 ? (
                       signalsData.signals.map((signal: any) => (
                         <tr key={signal.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 font-medium">{signal.symbol}</td>
+                          <td className="px-6 py-4 font-bold">{signal.symbol}</td>
                           <td
-                            className={`px-6 py-4 font-medium ${getActionColor(
+                            className={`px-6 py-4 font-black ${getActionColor(
                               signal.action
                             )}`}
                           >
                             {signal.action.toUpperCase()}
                           </td>
-                          <td className="px-6 py-4 text-gray-600">{signal.order_type}</td>
-                          <td className="px-6 py-4 text-gray-600">
+                          <td className="px-6 py-4 font-medium text-gray-600">{signal.order_type}</td>
+                          <td className="px-6 py-4 font-medium text-gray-600">
                             {signal.quantity || '-'}
                           </td>
                           <td className="px-6 py-4 text-gray-600 text-sm">
-                            <div>TP: {signal.take_profit || '-'}</div>
-                            <div>SL: {signal.stop_loss || '-'}</div>
+                            <div className="font-medium">TP: {signal.take_profit || '-'}</div>
+                            <div className="font-medium">SL: {signal.stop_loss || '-'}</div>
                           </td>
                           <td className="px-6 py-4">
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                                signal.status
-                              )}`}
-                            >
+                            <Badge variant={signal.status === 'executed' ? 'success' : signal.status === 'failed' ? 'destructive' : 'secondary'}>
                               {signal.status}
-                            </span>
+                            </Badge>
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-500">
+                          <td className="px-6 py-4 text-sm text-gray-500 font-medium">
                             {formatDate(signal.created_at)}
                           </td>
                           <td className="px-6 py-4">
@@ -254,7 +250,7 @@ export default function SignalsPage() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                        <td colSpan={8} className="px-6 py-8 text-center text-gray-500 font-medium">
                           No signals found
                         </td>
                       </tr>
@@ -265,12 +261,12 @@ export default function SignalsPage() {
 
               {/* Pagination */}
               {signalsData?.pages > 1 && (
-                <div className="flex items-center justify-between px-6 py-4 border-t">
-                  <div className="text-sm text-gray-500">
+                <div className="flex items-center justify-between px-6 py-4 border-t-3 border-black">
+                  <div className="text-sm font-medium text-gray-500">
                     Page {signalsData.page} of {signalsData.pages} ({signalsData.total}{' '}
                     total)
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <Button
                       size="sm"
                       variant="outline"

@@ -86,12 +86,12 @@ export default function AccountsPage() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-50">
       <Sidebar />
       <main className="flex-1 overflow-auto p-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">MT Accounts</h1>
+            <h1 className="text-4xl font-black text-black">MT Accounts</h1>
             <Button onClick={() => setShowCreateForm(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Add Account
@@ -100,17 +100,17 @@ export default function AccountsPage() {
 
           {/* New API Key Alert */}
           {newApiKey && (
-            <Card className="mb-6 border-green-500 bg-green-50">
+            <Card className="mb-6 !border-emerald-500 !bg-emerald-50">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-green-800">
+                    <p className="font-bold text-emerald-800">
                       API Key Generated Successfully
                     </p>
-                    <p className="text-sm text-green-600 mt-1">
+                    <p className="text-sm text-emerald-600 mt-1 font-medium">
                       Copy this key now. It won&apos;t be shown again.
                     </p>
-                    <code className="block mt-2 p-2 bg-white rounded border text-sm font-mono">
+                    <code className="block mt-2 p-3 bg-white border-2 border-black text-sm font-mono">
                       {newApiKey}
                     </code>
                   </div>
@@ -155,7 +155,7 @@ export default function AccountsPage() {
                 >
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-sm font-medium">Name *</label>
+                      <label className="text-sm font-bold mb-2 block">Name *</label>
                       <Input
                         value={newAccount.name}
                         onChange={(e) =>
@@ -166,7 +166,7 @@ export default function AccountsPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium">Platform *</label>
+                      <label className="text-sm font-bold mb-2 block">Platform *</label>
                       <select
                         value={newAccount.platform}
                         onChange={(e) =>
@@ -175,14 +175,14 @@ export default function AccountsPage() {
                             platform: e.target.value as 'mt4' | 'mt5',
                           })
                         }
-                        className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                        className="w-full h-10 px-3 border-2 border-black bg-white font-medium"
                       >
                         <option value="mt4">MetaTrader 4</option>
                         <option value="mt5">MetaTrader 5</option>
                       </select>
                     </div>
                     <div>
-                      <label className="text-sm font-medium">Broker</label>
+                      <label className="text-sm font-bold mb-2 block">Broker</label>
                       <Input
                         value={newAccount.broker}
                         onChange={(e) =>
@@ -192,7 +192,7 @@ export default function AccountsPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium">Account Number</label>
+                      <label className="text-sm font-bold mb-2 block">Account Number</label>
                       <Input
                         value={newAccount.account_number}
                         onChange={(e) =>
@@ -205,7 +205,7 @@ export default function AccountsPage() {
                       />
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <Button type="submit" disabled={createMutation.isPending}>
                       {createMutation.isPending ? 'Creating...' : 'Create Account'}
                     </Button>
@@ -226,7 +226,7 @@ export default function AccountsPage() {
           <div className="grid gap-4">
             {isLoading ? (
               <Card>
-                <CardContent className="py-8 text-center text-gray-500">
+                <CardContent className="py-8 text-center text-gray-500 font-medium">
                   Loading accounts...
                 </CardContent>
               </Card>
@@ -238,7 +238,7 @@ export default function AccountsPage() {
                       <div className="flex items-center gap-4">
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-lg">{account.name}</h3>
+                            <h3 className="font-bold text-lg">{account.name}</h3>
                             <Badge
                               variant={account.is_active ? 'success' : 'secondary'}
                             >
@@ -248,7 +248,7 @@ export default function AccountsPage() {
                               {account.platform.toUpperCase()}
                             </Badge>
                           </div>
-                          <div className="text-sm text-gray-500 mt-1">
+                          <div className="text-sm text-gray-500 mt-1 font-medium">
                             {account.broker && <span>{account.broker}</span>}
                             {account.account_number && (
                               <span> • #{account.account_number}</span>
@@ -312,7 +312,7 @@ export default function AccountsPage() {
             ) : (
               <Card>
                 <CardContent className="py-12 text-center">
-                  <p className="text-gray-500 mb-4">No accounts yet</p>
+                  <p className="text-gray-500 mb-4 font-medium">No accounts yet</p>
                   <Button onClick={() => setShowCreateForm(true)}>
                     <Plus className="h-4 w-4 mr-2" />
                     Create your first account

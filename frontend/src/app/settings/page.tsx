@@ -115,27 +115,29 @@ export default function SettingsPage() {
 }`;
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-50">
       <Sidebar />
       <main className="flex-1 overflow-auto p-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Settings</h1>
+          <h1 className="text-4xl font-black text-black mb-8">Settings</h1>
 
           {/* Webhook Configuration */}
           <Card className="mb-6">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Key className="h-5 w-5" />
+                <div className="w-8 h-8 bg-emerald-100 border-2 border-black flex items-center justify-center">
+                  <Key className="h-4 w-4 text-emerald-600" />
+                </div>
                 Webhook Configuration
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="font-medium">
                 Configure your TradingView alerts to send signals to this webhook
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Webhook URL */}
               <div>
-                <label className="text-sm font-medium">Webhook URL</label>
+                <label className="text-sm font-bold mb-2 block">Webhook URL</label>
                 <div className="flex gap-2 mt-1">
                   <Input value={webhookUrl} readOnly className="font-mono text-sm" />
                   <Button
@@ -145,14 +147,14 @@ export default function SettingsPage() {
                     <Copy className="h-4 w-4" />
                   </Button>
                 </div>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-500 mt-2 font-medium">
                   Use this URL in your TradingView alert webhook settings
                 </p>
               </div>
 
               {/* Webhook Secret */}
               <div>
-                <label className="text-sm font-medium">Webhook Secret</label>
+                <label className="text-sm font-bold mb-2 block">Webhook Secret</label>
                 <div className="flex gap-2 mt-1">
                   <Input
                     value={user?.webhook_secret || ''}
@@ -183,20 +185,20 @@ export default function SettingsPage() {
                     Regenerate
                   </Button>
                 </div>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-500 mt-2 font-medium">
                   Include this secret in your TradingView alert message to authenticate
                 </p>
               </div>
 
               {/* Example Alert */}
               <div>
-                <label className="text-sm font-medium">
+                <label className="text-sm font-bold mb-2 block">
                   Example TradingView Alert Message
                 </label>
-                <pre className="mt-1 p-4 bg-gray-900 text-gray-100 rounded-md overflow-x-auto text-sm">
+                <pre className="mt-1 p-4 bg-black text-emerald-400 border-3 border-black overflow-x-auto text-sm font-mono">
                   {exampleAlert}
                 </pre>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-500 mt-2 font-medium">
                   Copy this template and customize it for your trading strategy
                 </p>
               </div>
@@ -207,31 +209,33 @@ export default function SettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
+                <div className="w-8 h-8 bg-emerald-100 border-2 border-black flex items-center justify-center">
+                  <User className="h-4 w-4 text-emerald-600" />
+                </div>
                 Profile Settings
               </CardTitle>
-              <CardDescription>Update your account information</CardDescription>
+              <CardDescription className="font-medium">Update your account information</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleUpdateProfile} className="space-y-4">
                 {profileError && (
-                  <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
+                  <div className="bg-red-50 text-red-600 p-3 border-2 border-red-500 text-sm font-medium">
                     {profileError}
                   </div>
                 )}
                 {profileSuccess && (
-                  <div className="bg-green-50 text-green-600 p-3 rounded-md text-sm">
+                  <div className="bg-emerald-50 text-emerald-600 p-3 border-2 border-emerald-500 text-sm font-medium">
                     {profileSuccess}
                   </div>
                 )}
 
                 <div>
-                  <label className="text-sm font-medium">Email</label>
+                  <label className="text-sm font-bold mb-2 block">Email</label>
                   <Input value={user?.email || ''} disabled className="mt-1" />
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium">Full Name</label>
+                  <label className="text-sm font-bold mb-2 block">Full Name</label>
                   <Input
                     value={profileForm.full_name}
                     onChange={(e) =>
@@ -242,7 +246,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium">New Password</label>
+                  <label className="text-sm font-bold mb-2 block">New Password</label>
                   <Input
                     type="password"
                     value={profileForm.password}
@@ -255,7 +259,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium">Confirm New Password</label>
+                  <label className="text-sm font-bold mb-2 block">Confirm New Password</label>
                   <Input
                     type="password"
                     value={profileForm.confirm_password}

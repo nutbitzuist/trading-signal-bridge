@@ -11,6 +11,7 @@ import {
   Users,
   Download,
   BookOpen,
+  TrendingUp,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -33,15 +34,17 @@ export function Sidebar() {
   const { logout, user } = useAuth();
 
   return (
-    <div className="flex flex-col h-full w-64 bg-gray-900">
+    <div className="flex flex-col h-full w-64 bg-black border-r-3 border-black">
       {/* Logo */}
-      <div className="flex items-center h-16 px-6 border-b border-gray-800">
-        <Signal className="h-8 w-8 text-blue-500" />
+      <div className="flex items-center h-16 px-6 border-b-3 border-gray-800">
+        <div className="w-8 h-8 bg-emerald-500 border-2 border-white flex items-center justify-center">
+          <TrendingUp className="h-5 w-5 text-white" />
+        </div>
         <span className="ml-2 text-xl font-bold text-white">SignalBridge</span>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-4 space-y-1 overflow-auto">
+      <nav className="flex-1 px-4 py-4 space-y-2 overflow-auto">
         {navigation.map((item) => {
           const isActive = pathname === item.href;
           return (
@@ -49,10 +52,10 @@ export function Sidebar() {
               key={item.name}
               href={item.href}
               className={cn(
-                'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                'flex items-center px-3 py-2 text-sm font-bold transition-all',
                 isActive
-                  ? 'bg-gray-800 text-white'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  ? 'bg-emerald-500 text-white border-2 border-white shadow-[2px_2px_0_0_#fff]'
+                  : 'text-gray-300 hover:bg-gray-900 hover:text-emerald-400 border-2 border-transparent'
               )}
             >
               <item.icon className="mr-3 h-5 w-5" />
@@ -65,7 +68,7 @@ export function Sidebar() {
         {user?.is_admin && (
           <>
             <div className="pt-4 pb-2">
-              <p className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              <p className="px-3 text-xs font-bold text-gray-500 uppercase tracking-wider">
                 Admin
               </p>
             </div>
@@ -76,10 +79,10 @@ export function Sidebar() {
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                    'flex items-center px-3 py-2 text-sm font-bold transition-all',
                     isActive
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                      ? 'bg-emerald-500 text-white border-2 border-white shadow-[2px_2px_0_0_#fff]'
+                      : 'text-gray-300 hover:bg-gray-900 hover:text-emerald-400 border-2 border-transparent'
                   )}
                 >
                   <item.icon className="mr-3 h-5 w-5" />
@@ -92,17 +95,17 @@ export function Sidebar() {
       </nav>
 
       {/* User info */}
-      <div className="p-4 border-t border-gray-800">
+      <div className="p-4 border-t-3 border-gray-800">
         <div className="flex items-center">
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate">
+            <p className="text-sm font-bold text-white truncate">
               {user?.full_name || user?.email}
             </p>
             <p className="text-xs text-gray-400 truncate">{user?.email}</p>
           </div>
           <button
             onClick={logout}
-            className="ml-2 p-2 text-gray-400 hover:text-white rounded-md hover:bg-gray-800"
+            className="ml-2 p-2 text-gray-400 hover:text-emerald-400 hover:bg-gray-900 border-2 border-transparent hover:border-gray-700 transition-all"
           >
             <LogOut className="h-5 w-5" />
           </button>
