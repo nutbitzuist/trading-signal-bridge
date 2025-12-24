@@ -33,7 +33,7 @@ input string   Group_Filters      = "=== Filters ===";                   // Filt
 input bool     UseTimeFilter      = false;                               // Enable time filter
 input int      StartHour          = 8;                                   // Start hour (Server time)
 input int      EndHour            = 20;                                  // End hour (Server time)
-input double   MaxSpreadPips      = 5.0;                                 // Maximum allowed spread in pips
+input double   MaxSpreadPips      = 50.0;                                // Maximum allowed spread in pips (increase for gold/indices)
 input bool     CloseBeforeWeekend = false;                               // Close all positions before weekend
 input int      FridayCloseHour    = 22;                                  // Friday close hour (Server time)
 input string   SymbolWhitelist    = "";                                  // Symbol whitelist (comma-separated, empty = all)

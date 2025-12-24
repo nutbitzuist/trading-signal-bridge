@@ -12,6 +12,7 @@
 input string   ServerURL          = "https://your-server.com/api/v1";  // Server URL
 input string   ApiKey             = "";                                  // API Key (from dashboard)
 input int      PollIntervalSec    = 2;                                   // Poll interval (seconds)
+input double   MaxSpreadPips      = 50.0;                                // Maximum allowed spread in pips (increase for gold/indices)
 input double   MaxLotSize         = 1.0;                                 // Maximum lot size
 input double   DefaultLotSize     = 0.1;                                 // Default lot size
 input int      Slippage           = 3;                                   // Slippage (points)
