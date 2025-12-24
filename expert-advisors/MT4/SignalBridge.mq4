@@ -652,11 +652,21 @@ bool TestConnection()
 string MapSymbol(string tvSymbol)
 {
    // Common mappings - customize based on your broker
+   // For brokers with 'm' suffix (micro accounts)
    if(tvSymbol == "XAUUSD" || tvSymbol == "GOLD")
-      return "XAUUSD";  // Adjust to your broker's gold symbol
+      return "XAUUSDm";  // Exness micro account gold symbol
 
    if(tvSymbol == "XTIUSD" || tvSymbol == "USOIL" || tvSymbol == "OIL")
-      return "XTIUSD";  // Adjust to your broker's oil symbol
+      return "XTIUSDm";  // Exness micro account oil symbol
+
+   // Try adding 'm' suffix for other symbols if they don't exist
+   if(SymbolSelect(tvSymbol, true))
+      return tvSymbol;
+   
+   // Try with 'm' suffix
+   string microSymbol = tvSymbol + "m";
+   if(SymbolSelect(microSymbol, true))
+      return microSymbol;
 
    // Return as-is if no mapping found
    return tvSymbol;
